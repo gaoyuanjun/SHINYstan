@@ -403,7 +403,7 @@ no_lgnd <- theme(legend.position = "none")
   y_scale <- scale_y_continuous(limits = y_lim)
   my_labs <- labs(x = "", y = bquote(hat(R)))
   lgnd_txt <- theme(legend.text = element_text(size = 14), legend.key.size = unit(1, "cm"), legend.text.align = 0, legend.position = "top")
-  my_clrs <- scale_color_manual(name = "", values = c("orange", "orangered", "darkorange"), 
+  my_clrs <- scale_color_manual(name = "", values = c("orange", "orangered", "maroon"), 
                                 labels = c(expression(hat(R) < 1.05), expression(hat(R) < 1.10),expression(hat(R) > 1.10)))
   axis_text <- theme(axis.text.y = element_text(face = "bold", color = "black"))
   gg_rhat <- ggplot(dat, aes(x = parameter, y = Rhat, ymax = Rhat, color = val))
