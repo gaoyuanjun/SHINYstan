@@ -9,7 +9,9 @@ Authors@R: c(person("Jonah Gabry", "Developer", role = "aut",
 	             email = "ds3268@columbia.edu"),
 	      person("Michael Andreae", "Developer", role = "aut",
 	             email = "ma2196@columbia.edu"))
+Maintainer: Jonah Gabry <jsg2201@columbia.edu>
 Description: Shiny app for exploring Stan models
+URL: http://mc-stan.org
 Depends:
     R (>= 3.1.1),
     shiny,
