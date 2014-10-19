@@ -8,7 +8,7 @@
 #' 
 launch_SHINYstan_demo <- function() {
   do.call("stanfit_to_SHINYstanfit", list(stanfit = schools, make = TRUE))    
-  shiny::runApp(system.file("SHINYstan2", package = "SHINYstanDraft"))  
+  shiny::runApp(system.file("SHINYstan", package = "SHINYstan"))  
 }
 
 

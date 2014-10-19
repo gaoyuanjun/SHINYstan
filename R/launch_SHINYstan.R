@@ -16,7 +16,7 @@ launch_SHINYstan <- function(stanfit) {
       stop(paste(name, "is not a stanfit object."))
   }
   do.call("stanfit_to_SHINYstanfit", list(stanfit = stanfit, make = TRUE))    
-  shiny::runApp(system.file("SHINYstan2", package = "SHINYstanDraft"))  
+  shiny::runApp(system.file("SHINYstan", package = "SHINYstan"))  
 }
 
 
