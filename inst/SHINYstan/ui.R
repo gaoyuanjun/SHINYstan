@@ -2,7 +2,7 @@ library(shiny)
 library(ggplot2)
 library(plyr)
 library(reshape2)
-library(scales)
+library(grid)
 library(rstan)
 
 # load the helper functions
