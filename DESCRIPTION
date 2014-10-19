@@ -1,7 +1,7 @@
 Package: SHINYstan
 Title: Shiny app for exploring Stan models
 Version: 0.1
-Authors@R: c(person("Jonah Gabry", "Developer", role = "aut",
+Authors@R: c(person("Jonah Gabry", "Developer", role = c("aut","cre"),
                      email = "jsg2201@columbia.edu"),
               person("Yuanjun Gao", "Developer", role = "aut",
 		     email = "yg2312@columbia.edu"),
