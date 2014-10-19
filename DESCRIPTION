@@ -18,7 +18,7 @@ Depends:
     rstan,
     ggplot2,
     plyr,
-    scales,
+    grid,
     reshape2
 License: MIT
 LazyData: true
