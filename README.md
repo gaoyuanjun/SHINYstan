@@ -6,12 +6,12 @@ Shiny app for Stan models (work in progress).
 
 # Instructions:
 
-install.packages("devtools")
+1. Install "devtools" R package 
 
-library(devtools)
+2. Use the install_github function in "devtools" package to install SHINYstan from github
 
 install_github("jgabry/SHINYstan")
 
-library(SHINYstan)
+3. Load/attach the SHINYstan package with library(SHINYstan)
 
-launch_SHINYstan_demo()
+4. Use the launch_SHINYstan_demo() function to launch the demo or use launch_SHINYstan(stanfit), replacing stanfit with a stanfit of your choice. 
