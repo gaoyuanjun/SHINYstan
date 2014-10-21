@@ -91,10 +91,15 @@ mainPanel(width = 10,
             fluidRow(
         # select estimates to show  
               column(3, selectInput("dens_point_est", h6("Point estimate"), choices = c("None","Mean","Median","MAP"), selected = "None")),
-              column(3, selectInput("dens_ci", h6("Credible Interval"), choices = c("None" = "None", "50%" = 50, "80%" = 80, "95%" = 95), selected = "None")),
+              column(3, selectInput("dens_ci", h6("Credible interval"), choices = c("None" = "None", "50%" = 0.5, "80%" = 0.8, "95%" = 0.95), selected = "None")),
         # select colors    
-              column(3, selectInput("dens_fill_color", h6("Density Color"), choices = colors(), selected = "black")),
-              column(3, selectInput("dens_line_color", h6("Line Color"), choices = colors(), selected = "lightgray"))
+              column(3, selectInput("dens_fill_color", h6("Density color"), choices = colors(), selected = "gray35")),
+              column(3, selectInput("dens_line_color", h6("Line color"), choices = colors(), selected = "lightgray"))
+            ),
+            fluidRow(
+        # number of x-axis breaks      
+              column(3, selectInput("dens_y_breaks", h6("Breakpoints (y-axis)"), choices = c("None", "Some", "Many", "Too Many"), selected = "Some")),
+              column(3, selectInput("dens_x_breaks", h6("Breakpoints (x-axis)"), choices = c("None", "Some", "Many", "Too Many"), selected = "Some"))
             )
             )
           )
@@ -103,21 +108,51 @@ mainPanel(width = 10,
       ),
       
       ## Contour plot tab ##
-      tabPanel("Contour",
+      tabPanel("Bivariate",
         wellPanel(
+          fluidRow(
         # select 2nd parameter
-        selectInput(inputId = "param2_contour", label = h6("Select a 2nd parameter:"), choices = object@param_names, multiple = FALSE),
+            column(5, selectInput(inputId = "param2_contour", label = h6("Select a 2nd parameter:"), choices = object@param_names, multiple = FALSE)),
+            #select type
+            column(4, offset = 1, selectInput("contour_type", h6("Style"), choices = c("Scatter", "Contour", "Point"), selected = "Scatter"))
+          ),
         checkboxInput("contour_customize", h6("Customize appearance"), value = FALSE),
-          conditionalPanel(condition = "input.contour_customize == true",
+          conditionalPanel(condition = "(input.contour_customize == true && input.contour_type == 'Contour')",
             wellPanel(style = "background-color: #F7FCF5;",
             fluidRow(
-              #select type
-              column(2, selectInput("contour_type", h6("Type"), choices = c("Point", "Contour"), selected = "Point")),
               # select colors    
               column(3, selectInput("contour_high_color", h6("High color"), choices = colors(), selected = "skyblue")),
               column(3, selectInput("contour_low_color", h6("Low color"), choices = colors(), selected = "navyblue")),
               # set binwidth
-              column(4, numericInput("contour_bins", h6("Bins (if Type='Contour')"), value = 10, min = 1))
+              column(4, numericInput("contour_bins", h6("Number of Bins"), value = 10, min = 1))
+            )
+            )
+          ),
+          conditionalPanel(condition = "(input.contour_customize == true && input.contour_type == 'Point')",
+            wellPanel(style = "background-color: #F7FCF5;",
+            fluidRow(
+              # select colors    
+              column(3, selectInput("point_high_color", h6("High color"), choices = colors(), selected = "skyblue")),
+              column(3, selectInput("point_low_color", h6("Low color"), choices = colors(), selected = "navyblue"))
+            )
+            )
+          ),
+          conditionalPanel(condition = "(input.contour_customize == true && input.contour_type == 'Scatter')",
+            wellPanel(style = "background-color: #F7FCF5;",
+            fluidRow(
+              # point options
+              column(3, selectInput("scatter_pt_color", h6("Point Color"), choices = colors(), selected = "black")),
+              column(2, numericInput("scatter_pt_size", h6("Size"), value = 2, min = 0, max = 10, step = 0.25)),
+              column(1, numericInput("scatter_pt_shape", h6("Shape"), value = 1, min = 1, max = 10, step = 1)),                                     
+              column(2, numericInput("scatter_pt_alpha", h6("Opacity"), value = 0.35, min = 0, max = 1, step = 0.01))
+              ),
+            fluidRow(
+              # ellipse options
+              column(3, selectInput("scatter_ellipse_color", h6("Ellipse Color"), choices = colors(), selected = "black")),
+              column(2, numericInput("scatter_ellipse_lwd", h6("Size"), value = 1, min = 0, max = 5, step = 0.25)),
+              column(1, numericInput("scatter_ellipse_lty", h6("Shape"), value = 1, min = 1, max = 6, step = 1)),
+              column(2, numericInput("scatter_ellipse_alpha", h6("Opacity"), value = 1, min = 0, max = 1, step = 0.01)),
+              column(3, offset = 1, selectInput("scatter_ellipse_lev", h6("Level"), choices = c("None" = "None", "50%" = 0.5, "80%" = 0.8, "95%" = 0.95, "99%" = 0.99), selected = "None"))
             )
             )
           )
@@ -157,7 +192,7 @@ mainPanel(width = 10,
                     # select colors    
                     column(3, selectInput("param_plot_fill_color", h6("Density/CI color"), choices = colors(), selected = "gray")),
                     column(3, selectInput("param_plot_outline_color", h6("Outline color"), choices = colors(), selected = "black")),
-                    column(3, selectInput("param_plot_est_color", h6("Point estimate color"), choices = colors(), selected = "turquoise4")),
+                    column(3, selectInput("param_plot_est_color", h6("Point estimate color"), choices = colors(), selected = "black")),
                     # select point estimate
                     column(3, selectInput("param_plot_point_est", h6("Point estimate value"), choices = c("Median", "Mean"), selected = "Median"))
                   )

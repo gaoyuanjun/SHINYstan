@@ -164,7 +164,7 @@ no_lgnd <- theme(legend.position = "none")
 
 .param_dens <- function(param, dat, warmup_val, chain, 
                         fill_color = NULL, line_color = NULL, 
-                        point_est, CI) {
+                        point_est, CI, x_breaks, y_breaks) {
   
   dat <- melt(dat)
   
@@ -180,9 +180,21 @@ no_lgnd <- theme(legend.position = "none")
   fclr <- ifelse(is.null(fill_color), "black", fill_color)
   lclr <- ifelse(is.null(line_color), "lightgray", line_color)
   
+  many_breaks <- function(x) pretty(x, n = 15)
+  too_many_breaks <- function(x) pretty(x, n = 30)
+  if(x_breaks == "None") x_scale <- scale_x_continuous(breaks = NULL)
+  if(x_breaks == "Some") x_scale <- scale_x_continuous()
+  if(x_breaks == "Many") x_scale <- scale_x_continuous(breaks = many_breaks) 
+  if(x_breaks == "Too Many") x_scale <- scale_x_continuous(breaks = too_many_breaks) 
+  if(y_breaks == "None") y_scale <- scale_y_continuous(breaks = NULL)
+  if(y_breaks == "Some") y_scale <- scale_y_continuous()
+  if(y_breaks == "Many") y_scale <- scale_y_continuous(breaks = many_breaks) 
+  if(y_breaks == "Too Many") y_scale <- scale_y_continuous(breaks = too_many_breaks) 
+  
   gg_dens <- ggplot(dens_dat, aes(x = x, ymax = y))
   gg_dens <- (gg_dens + 
                 labs(x = param, y = "") +
+                x_scale + y_scale +
                 geom_ribbon(ymin = 0, fill = fclr, color = fclr) + 
                 ggtitle("Posterior Density (post-warmup) \n") + 
                 theme_classic() %+replace% (fat_axis + h_lines))
@@ -194,7 +206,7 @@ no_lgnd <- theme(legend.position = "none")
                                 color = lclr, lwd = 1, lty = 2)
   }
   if (CI != "None") {
-    lev <- (1 - as.numeric(CI)/100)/2
+    lev <- (1 - as.numeric(CI))/2
     quant <- quantile(dat$value, probs = c(lev, 1 - lev))
     gg_dens <- (gg_dens + 
                 annotate("segment", x = quant, xend = quant, y = 0, yend = max(dens_dat$y), color = lclr, lty = rep(1:length(CI),2))
@@ -205,7 +217,17 @@ no_lgnd <- theme(legend.position = "none")
 
 
 # param_contour -----------------------------------------------------------
-.param_contour <- function(samps, param, param2, type, high_color, low_color, nBins) {
+# .param_contour <- function(samps, param, param2, type, 
+#                            high_color, low_color, nBins,
+#                            pt_alpha, pt_size, pt_shape, pt_color, 
+#                            ci_lev, ci_color, ci_lty, ci_lwd, ci_alpha) {
+.param_contour <- function(samps, param, param2, type, contour_ops, pt_ops, scatter_ops) {
+  
+  shape_translator <- function(x) {
+    shape <- ifelse(x >= 6, x + 9, x)
+    shape
+  }
+  
   params <- c(param, param2)
   nParams <- 2
   nIter <- dim(samps)[1] * dim(samps)[2]
@@ -214,12 +236,20 @@ no_lgnd <- theme(legend.position = "none")
   dat <- data.frame(x = samps.use[,param], y = samps.use[,param2])
   g <- ggplot(dat, aes(x = x, y = y)) + labs(x = param, y = param2)      
   if (type == "Point") {
-    g <- (g + stat_density2d(geom="point", aes(size = ..density.., color = ..density..), contour = FALSE) +
-      scale_color_gradient(low = low_color, high = high_color))
+    g <- (g + 
+            with(contour_ops, stat_density2d(geom="point", aes(size = ..density.., color = ..density..), contour = FALSE)) +
+            with(contour_ops, scale_color_gradient(low = low_color, high = high_color)))
   }
   if (type == "Contour") {
-    g <- (g + stat_density2d(geom="path", aes(color = ..level..), bins = nBins, contour = TRUE) + 
-       scale_color_gradient(low = low_color, high = high_color))
+    g <- (g + 
+            with(contour_ops, stat_density2d(geom="path", aes(color = ..level..), bins = nBins, contour = TRUE)) + 
+            with(contour_ops, scale_color_gradient(low = low_color, high = high_color)))
+  }
+  if (type == "Scatter") {
+    g <- g + with(scatter_ops, geom_point(alpha = pt_alpha, size = pt_size, shape = shape_translator(pt_shape), color = pt_color))
+    if (scatter_ops$ci_lev != "None") {
+      g <- g + with(scatter_ops, stat_ellipse(level = as.numeric(ci_lev), color = ci_color, linetype = ci_lty, size = ci_lwd, alpha = ci_alpha))
+    }
   }
   g + theme_classic() %+replace% (no_lgnd + fat_axis)
 }

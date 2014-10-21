@@ -3,6 +3,11 @@
 #' @export
 #' 
 stanfit_to_SHINYstanfit <- function(stanfit, make = FALSE) {
+  if (!inherits(stanfit, "stanfit")) {
+    name <- deparse(substitute(stanfit))
+    stop(paste(name, "is not a stanfit object."))
+  }
+  
   slots <- list()
   slots$Class <- "SHINYstanfit"
   slots$model_name <- stanfit@model_name

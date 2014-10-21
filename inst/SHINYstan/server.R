@@ -74,24 +74,49 @@ shinyServer(function(input, output) {
         dat         = par_samps_post_warmup(),
         chain       = input$dens_chain,
         warmup_val  = warmup_val,
-        fill_color  = ifelse(customize, input$dens_fill_color, "black"),
+        fill_color  = ifelse(customize, input$dens_fill_color, "gray35"),
         line_color  = ifelse(customize, input$dens_line_color, "lightgray"), 
-        point_est = ifelse(customize, input$dens_point_est, "None"),
-        CI = ifelse(customize, input$dens_ci, "None")
+        point_est   = ifelse(customize, input$dens_point_est, "None"),
+        CI          = ifelse(customize, input$dens_ci, "None"),
+        x_breaks    = ifelse(customize, input$dens_x_breaks, "Some"),
+        y_breaks    = ifelse(customize, input$dens_y_breaks, "Some")
       )) 
   })
 
 #### PLOT: contour (two parameters) ####
   output$contour_plot <- renderPlot({
     customize <- input$contour_customize
+    type <- input$contour_type
+    type_contour <- type == "Contour"
+    type_point <- type == "Point"
+    type_scatter <- type == "Scatter"
+    if (customize & type_scatter & input$scatter_ellipse_lev != "None") {
+      validate(need(input$param != input$param2_contour, "Please select a different 2nd parameter to use this option."))
+    }
+    
     do.call(".param_contour", args = list(
       samps       = samps_post_warmup,
       param       = input$param,
       param2      = input$param2_contour,
-      type        = ifelse(customize, input$contour_type, "Point"),
-      nBins       = ifelse(customize, input$contour_bins, 10),
-      high_color  = ifelse(customize, input$contour_high_color, "skyblue"),
-      low_color   = ifelse(customize, input$contour_low_color, "navyblue")
+      type        = type,
+      contour_ops = list(
+        nBins       = ifelse(customize, input$contour_bins, 10),
+        high_color  = ifelse(customize & type_contour, input$contour_high_color, 
+                             ifelse(customize & type_point, input$point_high_color, "skyblue")),
+        low_color   = ifelse(customize & type_contour, input$contour_low_color, 
+                             ifelse(customize & type_point, input$point_low_color, "navyblue"))
+        ),
+      scatter_ops   = list(
+        pt_alpha    = ifelse(customize & type_scatter, input$scatter_pt_alpha, 0.35),
+        pt_size     = ifelse(customize & type_scatter, input$scatter_pt_size, 2),
+        pt_shape    = ifelse(customize & type_scatter, input$scatter_pt_shape, 1),
+        pt_color    = ifelse(customize & type_scatter, input$scatter_pt_color, "black"),
+        ci_lev      = ifelse(customize & type_scatter, input$scatter_ellipse_lev, "None"),
+        ci_color    = ifelse(customize & type_scatter, input$scatter_ellipse_color, "black"),
+        ci_lty      = ifelse(customize & type_scatter, input$scatter_ellipse_lty, 1),
+        ci_lwd      = ifelse(customize & type_scatter, input$scatter_ellipse_lwd, 1),
+        ci_alpha    = ifelse(customize & type_scatter, input$scatter_ellipse_alpha, 1)
+      )
     ))
   })
 
@@ -120,7 +145,7 @@ shinyServer(function(input, output) {
       point_est     = ifelse(customize, input$param_plot_point_est, "Median"),
       fill_color    = ifelse(customize, input$param_plot_fill_color, "gray"),
       outline_color = ifelse(customize, input$param_plot_outline_color, "black"),
-      est_color  = ifelse(customize, input$param_plot_est_color, "turquoise4")
+      est_color     = ifelse(customize, input$param_plot_est_color, "black")
     ))
   }, height = calc_height_plot_param_vertical)
 

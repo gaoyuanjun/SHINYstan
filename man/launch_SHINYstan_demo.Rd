@@ -3,11 +3,23 @@
 \alias{launch_SHINYstan_demo}
 \title{Launch SHINYstan app in demo mode}
 \usage{
-launch_SHINYstan_demo()
+launch_SHINYstan_demo(demo_name)
+}
+\arguments{
+\item{demo_name}{The name of the demo model. If \code{demo_name} is omitted it will default
+to the "eight schools" Stan example model. See 'Note' below for the available demos.}
 }
 \description{
 This function will create an S4 object of class \code{SHINYstanfit} in the Global Environment
-and then launch the SHINYstan app using the pre-loaded Stan example model "schools".
+and then launch the SHINYstan app using a pre-loaded Stan example model.
+}
+\note{
+List of available demo models:
+\describe{
+  \item{eight_schools}{Eight Schools}
+  \item{binormal}{Binormal}
+  \item{normal}{Normal}
+}
 }
 \seealso{
 \code{\link[rstan]{stan_demo}}
