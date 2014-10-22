@@ -1,106 +1,15 @@
-# reused functions --------------------------------------------------------
+# misc. functions --------------------------------------------------------
 .in_range <- function(x, a, b) {
   x >= a & x <= b
 }
 
-
-# reused ggplot theme elements --------------------------------------------
+# ggplot theme elements --------------------------------------------
 fat_axis <- theme(axis.line = element_line(size = 1.5))
 h_lines <- theme(panel.grid.major = element_line(size = 0.25, linetype = 3, color = "turquoise4"),
                  panel.grid.major.x = element_blank())
 v_lines <- theme(panel.grid.major = element_line(size = 0.25, linetype = 3, color = "turquoise4"),
                  panel.grid.major.y = element_blank())
 no_lgnd <- theme(legend.position = "none")
-
-
-
-# find_stan --------------------------------------------------------------
-.find_stan <- function() {
-  is.stanfit <- function(X) inherits(X, "stanfit")
-  objs <- mget(ls(envir = .GlobalEnv), envir = .GlobalEnv)
-  stanfits <- names(Filter(is.stanfit, objs))  
-  return(stanfits)
-}
-
-# check_stan --------------------------------------------------------------
-.check_stan <- function() {
-  found <- .find_stan()
-  stanfit_in_found <- "stanfit" %in% found
-  multiple_stanfits <- length(found) > 1
-  no_stanfits <- length(found) == 0
-  if (multiple_stanfits & !stanfit_in_found) return("multiple")
-  if (no_stanfits) return("none")
-  return("ok")
-}
-
-# get_stan ---------------------------------------------------------------
-.get_stan <- function() {
-  stopifnot(.check_stan() == "ok")
-  found <- .find_stan()
-  stanfit_in_found <- "stanfit" %in% found
-  if (stanfit_in_found) {
-    return(get("stanfit"))
-  }
-  return(get(found))
-}
-
-
-# get_par_groups ----------------------------------------------------------
-.get_par_groups <- function(stanfit, include_lp = TRUE) {
-  groups <- stanfit@model_pars
-  if (include_lp) {
-    return(groups)
-  }
-  return(groups[-which(groups == "lp__")])
-}
-
-
-# make_parlist ------------------------------------------------------------
-.make_parlist <- function(stanfit, include_lp = TRUE) {
-  names <- sort(stanfit@sim$fname)
-  names <- names[-which(names == "lp__")]
-  if (include_lp) {
-    names <- c(names, "lp__")
-  }
-  parlist <- as.list(names)
-  names(parlist) <- names
-  return(parlist)
-}
-
-
-# check_stanfit ------------------------------------------------------------------
-.check_stanfit <- function(stanfit) {
-  if (stanfit@mode == 1L) {
-    cat("Stan model '", stanfit@model_name, "' is of mode 'test_grad';\n", 
-        "sampling is not conducted.\n", sep = "")
-    return(invisible(NULL))
-  }
-  else if (stanfit@mode == 2L) {
-    cat("Stan model '", stanfit@model_name, "' does not contain samples.\n", 
-        sep = "")
-    return(invisible(NULL))
-  }
-  if (isTRUE(all.equal(stanfit@sim$n_save, stanfit@sim$warmup2, 
-                       check.attributes = FALSE, 
-                       check.names = FALSE))) {
-    cat("Stan model '", stanfit@model_name, "' does not contain samples after warmup.\n", 
-        sep = "")
-    return(invisible(NULL))
-  }
-}
-
-
-# get_model_info ------------------------------------------------------------
-.get_model_info <- function(stanfit) {
-  n_chains <- ncol(stanfit)
-  date <- stanfit@date
-  date <- gsub("  "," ", date)
-  n_warm <- stanfit@sim$warmup
-  n_iter <- stanfit@sim$iter
-  out <- list(Date = date, Chains = n_chains, Iterations = n_iter, Warmup = n_warm)
-  return(out)
-}
-
 
 # param_trace -------------------------------------------------------------
 .param_trace <- function(param, dat, warmup_val, chain, x1, x2, y1, y2) {
@@ -131,38 +40,7 @@ no_lgnd <- theme(legend.position = "none")
 
 
 # param_dens --------------------------------------------------------------
-# .param_dens <- function(param, dat, warmup_val, chain, fill_color = NULL, point_est) {
-#   dat <- subset(melt(dat), iterations > warmup_val)
-#   
-#   if (chain != 0) {
-#     dat <- subset(dat, chains == paste0("chain:",chain))
-#   }
-#   
-#   Mean <- mean(dat$value)
-#   Median <- median(dat$value)
-#   densx <- density(dat$value)$x
-#   densy <- density(dat$value)$y
-#   MAP <- densx[which.max(densy)]
-#   #     ynd <- max(density(dat$value)$y)/10
-#   
-#   clr <- ifelse(is.null(fill_color), "black", fill_color)
-#   
-#   gg_dens <- ggplot(dat, aes(x = value))
-#   gg_dens <- (gg_dens + 
-#                 labs(x = param, y = "") +
-#                 geom_density(fill = clr, color = clr) + 
-#                 ggtitle("Posterior Density (post-warmup) \n") + 
-#                 theme_classic() %+replace% (fat_axis + h_lines))
-#   
-#   if (point_est != "None") {
-#     gg_dens <- gg_dens + geom_segment(x = get(point_est), xend = get(point_est),
-#                                       y = 0, yend = max(densy),
-#                                       color = "lightgray", lwd = 1, lty = 2)
-#   }
-#   gg_dens
-# }
-
-.param_dens <- function(param, dat, warmup_val, chain, 
+.param_dens <- function(param, dat, chain, 
                         fill_color = NULL, line_color = NULL, 
                         point_est, CI, x_breaks, y_breaks) {
   
@@ -181,7 +59,7 @@ no_lgnd <- theme(legend.position = "none")
   lclr <- ifelse(is.null(line_color), "lightgray", line_color)
   
   many_breaks <- function(x) pretty(x, n = 15)
-  too_many_breaks <- function(x) pretty(x, n = 30)
+  too_many_breaks <- function(x) pretty(x, n = 45)
   if(x_breaks == "None") x_scale <- scale_x_continuous(breaks = NULL)
   if(x_breaks == "Some") x_scale <- scale_x_continuous()
   if(x_breaks == "Many") x_scale <- scale_x_continuous(breaks = many_breaks) 
@@ -220,7 +98,7 @@ no_lgnd <- theme(legend.position = "none")
 # .param_contour <- function(samps, param, param2, type, 
 #                            high_color, low_color, nBins,
 #                            pt_alpha, pt_size, pt_shape, pt_color, 
-#                            ci_lev, ci_color, ci_lty, ci_lwd, ci_alpha) {
+#                            appearance[["ci_lev"], ci_color, ci_lty, ci_lwd, ci_alpha) {
 .param_contour <- function(samps, param, param2, type, contour_ops, pt_ops, scatter_ops) {
   
   shape_translator <- function(x) {
@@ -231,9 +109,9 @@ no_lgnd <- theme(legend.position = "none")
   params <- c(param, param2)
   nParams <- 2
   nIter <- dim(samps)[1] * dim(samps)[2]
-  samps.use <- array(samps[,,params], c(nIter, nParams))
-  colnames(samps.use) <- params
-  dat <- data.frame(x = samps.use[,param], y = samps.use[,param2])
+  samps_use <- array(samps[,,params], c(nIter, nParams))
+  colnames(samps_use) <- params
+  dat <- data.frame(x = samps_use[,param], y = samps_use[,param2])
   g <- ggplot(dat, aes(x = x, y = y)) + labs(x = param, y = param2)      
   if (type == "Point") {
     g <- (g + 
@@ -285,41 +163,13 @@ no_lgnd <- theme(legend.position = "none")
 
 
 
-# coef_plot ---------------------------------------------------------------
-.coef_plot <- function(stanfit, params, point, ci_level) {
-  a <- 1 - (1 - ci_level)/2
-  dat <- summary(stanfit, pars = params, probs = c(0.5, a, 1-a))$summary
-  dat <- dat[-nrow(dat), ]
-  dat <- cbind(parameter = rownames(dat), as.data.frame(dat))
-  colnames(dat)[which(colnames(dat)=="50%")] <- "median"
-  colnames(dat)[which(colnames(dat)==paste0(a*100,"%"))] <- "upper"
-  colnames(dat)[which(colnames(dat)==paste0((1-a)*100,"%"))] <- "lower"
-  
-  if (point == "mean") {
-    dat <- mutate(dat, lb = mean - qnorm(a)*sd, ub = mean + qnorm(a)*sd)
-    gg <- ggplot(dat, aes(x = parameter, y = mean, 
-                          ymin = lb, ymax = ub, color = Rhat))
-  }
-  if (point == "median") {
-    gg <- ggplot(dat, aes(x = parameter, y = median, 
-                          ymin = lower, ymax = upper, color = Rhat))
-  }
-  no_labs <- labs(x = "", y = "")
-  rhat_colors <- scale_color_continuous(low = "blue", high = "red")
-  axis_text <- theme(axis.text.y = element_text(face = "bold", color = "black"))
-  lgnd_pos <- theme(legend.position = "top")
-  gg <- (gg + 
-           no_labs + rhat_colors + axis_text + 
-           geom_pointrange() + 
-           coord_flip() )
-  gg + theme_linedraw() %+replace% (lgnd_pos + fat_axis)
-}
 
 
 # plot_param_vertical ------------------------------------------------------------
+# plot_param_vertical ------------------------------------------------------------
 .plot_param_vertical <- function(samps, params = NULL, show.options,
-                                CI.level = 0.5, show.level = 0.95, point_est,
-                                fill_color, outline_color, segment_color, est_color){
+                                 CI.level = 0.5, show.level = 0.95, point_est,
+                                 fill_color, outline_color, segment_color, est_color){
   
   show.density <- "density" %in% show.options
   show.lines <- "lines" %in% show.options
@@ -356,7 +206,7 @@ no_lgnd <- theme(legend.position = "none")
   abline(h = y, lty = 2, col = "lightgray")
   grid(nx = NULL, ny = 0, lty = 2)
   
-#   axis(side = 2, at = y, labels = params, las = 1)
+  #   axis(side = 2, at = y, labels = params, las = 1)
   mtext(text = params, side = 2, las = 1, at = y, font = 2)
   axis(side = 3, lwd = 3)
   
@@ -382,13 +232,13 @@ no_lgnd <- theme(legend.position = "none")
               density=100, col = fill_color)
       
       lines(x.plot, y.plot, col = outline_color)
-#       d.line <- density(samps.use[,i], 
-#                         from = samps.quantile[i,2], 
-#                         to = samps.quantile[i,4], n = 2)
-#       x.plot <- d.line$x
-#       y.plot <- d.line$y / y.max * 0.8 + y[i]
-#       segments(x.plot, y[i], x.plot, y.plot, lty = 3)
-
+      #       d.line <- density(samps.use[,i], 
+      #                         from = samps.quantile[i,2], 
+      #                         to = samps.quantile[i,4], n = 2)
+      #       x.plot <- d.line$x
+      #       y.plot <- d.line$y / y.max * 0.8 + y[i]
+      #       segments(x.plot, y[i], x.plot, y.plot, lty = 3)
+      
       if (point_est == "Median") {
         segments(samps.median[i], y[i], samps.median[i], y[i] + 0.25,  lwd = 2, col = est_color)  
       }
@@ -467,3 +317,25 @@ no_lgnd <- theme(legend.position = "none")
 }
 
 
+
+# make_param_choices ------------------------------------------------------
+.make_param_choices <- function() {
+  choices <- list()
+  param_groups <- object@param_groups
+  param_dims <- object@param_dims
+  for(i in 1:length(param_groups)) {
+    if (length(param_dims[[i]]) == 0) {
+      choices[[i]] <- param_groups[i]
+    }
+    if (length(param_dims[[i]]) == 1) {
+      x <- paste0(param_groups[i],"[",1:param_dims[[i]],"]")
+      choices[[i]] <- x
+    }
+    if (length(param_dims[[i]]) == 2) {
+      x <- paste0(param_groups[i],"[",1:param_dims[[i]][1],",",1:param_dims[[i]][2],"]")
+      choices[[i]] <- x
+    }
+  }
+  names(choices) <- param_groups
+  choices
+}
