@@ -12,7 +12,8 @@ stanfit_to_SHINYstanfit <- function(stanfit, make = FALSE) {
   slots$Class <- "SHINYstanfit"
   slots$model_name <- stanfit@model_name
   slots$param_names <- stanfit@sim$fnames_oi
-  slots$param_groups <- stanfit@model_pars[-length(stanfit@model_pars)]
+  slots$param_dims <- stanfit@par_dims
+  slots$param_groups <- names(stanfit@par_dims)
   slots$samps_all <- rstan::extract(stanfit, permuted = FALSE, inc_warmup = TRUE)
   slots$samps_post_warmup <- rstan::extract(stanfit, permuted = FALSE, inc_warmup = FALSE)
   slots$summary <- rstan::summary(stanfit)$summary
