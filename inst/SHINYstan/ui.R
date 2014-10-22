@@ -192,7 +192,7 @@ mainPanel(width = 10,
               wellPanel(
                 fluidRow(
                   # select parameters
-                  column(5, selectizeInput("params_to_plot", label = h6("Select or enter parameter names"), width = '100%', choices = object@param_names[-which(object@param_names=="lp__")], multiple = TRUE)),
+                  column(5, selectizeInput("params_to_plot", label = h6("Select or enter parameter names"), width = '100%', choices = object@param_names, multiple = TRUE)),
                   # slider for credible interval
                   column(3, offset = 1, sliderInput("CI_level", h6("Credible Interval"), min = 50, max = 95, value = 50, step = 5)),
                   # checkbox to show density
@@ -203,7 +203,7 @@ mainPanel(width = 10,
                   wellPanel(style = "background-color: #D3D3D3;",             
                   fluidRow(
                     # select colors    
-                    column(3, selectInput("param_plot_fill_color", h6("Density/CI color"), choices = colors(), selected = "gray")),
+                    column(3, selectInput("param_plot_fill_color", h6("Density/CI color"), choices = colors(), selected = "gray35")),
                     column(3, selectInput("param_plot_outline_color", h6("Outline color"), choices = colors(), selected = "black")),
                     column(3, selectInput("param_plot_est_color", h6("Point estimate color"), choices = colors(), selected = "black")),
                     # select point estimate
@@ -243,8 +243,12 @@ mainPanel(width = 10,
       checkboxInput("sampler_warmup", label = h6("Include warmup period?"), value = TRUE),
       hr(),
       tableOutput("sampler_summary")
-    ) # END TAB: sampler
+    ), # END TAB: sampler
     
+    #### TAB: Info ####  
+    tabPanel("Info", 
+      h3("Info")
+    ) # END TAB: info
 ) # END all tabs
 ) # END mainPanel
 ) # END verticalLayout

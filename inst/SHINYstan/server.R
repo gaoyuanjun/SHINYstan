@@ -176,7 +176,7 @@ shinyServer(function(input, output) {
       CI.level      = input$CI_level/100,
       show.options  = input$show_options,
       point_est     = ifelse(customize, input$param_plot_point_est, "Median"),
-      fill_color    = ifelse(customize, input$param_plot_fill_color, "gray"),
+      fill_color    = ifelse(customize, input$param_plot_fill_color, "gray35"),
       outline_color = ifelse(customize, input$param_plot_outline_color, "black"),
       est_color     = ifelse(customize, input$param_plot_est_color, "black")
     ))
