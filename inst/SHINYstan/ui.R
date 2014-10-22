@@ -39,9 +39,9 @@ mainPanel(width = 10,
     wellPanel(style = "background-color: #F0F8FF;",
     fluidRow(
       # select parameter
-      column(5, selectizeInput(inputId = "param", label = "Select parameter:", choices = object@param_names, multiple = FALSE)),
+      column(5, selectizeInput(inputId = "param", label = h4("Select parameter:"), choices = object@param_names, multiple = FALSE)),
       # summary stats 
-      column(7, tableOutput("parameter_summary"))
+      column(7, tableOutput("parameter_summary_out"))
     )),
     
     # display parameter name 
@@ -65,7 +65,7 @@ mainPanel(width = 10,
                             "displayed in the trace plot."))
         ),
           conditionalPanel(condition = "input.tracezoom == true", 
-            wellPanel(style = "background-color: #F7FCF5;",          
+            wellPanel(style = "background-color: #D3D3D3;",          
             # trace zoom options
             fluidRow(
               # iterations slider
@@ -76,8 +76,12 @@ mainPanel(width = 10,
             )
           )
         ),
+        hr(),
         # plot
-        plotOutput("trace_plot")
+        plotOutput("trace_plot_out"),
+        hr(),
+        # export
+        downloadButton("download_trace", "Save ggplot2 object (.RData)")
       ),
       
       ## Density plot tab ##
@@ -87,7 +91,7 @@ mainPanel(width = 10,
         numericInput("dens_chain", h6("Chain number (0 for all chains):"), min = 0, max = object@nChains, step = 1, value = 0),
         checkboxInput("dens_customize", h6("Customize appearance"), value = FALSE),        
           conditionalPanel(condition = "input.dens_customize == true",
-            wellPanel(style = "background-color: #F7FCF5;",
+            wellPanel(style = "background-color: #D3D3D3;",
             fluidRow(
         # select estimates to show  
               column(3, selectInput("dens_point_est", h6("Point estimate"), choices = c("None","Mean","Median","MAP"), selected = "None")),
@@ -104,7 +108,12 @@ mainPanel(width = 10,
             )
           )
         ),
-        plotOutput("density_plot")
+        hr(),
+        # plot
+        plotOutput("density_plot_out"),
+        hr(),
+        # export
+        downloadButton("download_density", "Save ggplot2 object (.RData)")
       ),
       
       ## Contour plot tab ##
@@ -118,7 +127,7 @@ mainPanel(width = 10,
           ),
         checkboxInput("contour_customize", h6("Customize appearance"), value = FALSE),
           conditionalPanel(condition = "(input.contour_customize == true && input.contour_type == 'Contour')",
-            wellPanel(style = "background-color: #F7FCF5;",
+            wellPanel(style = "background-color: #D3D3D3;",
             fluidRow(
               # select colors    
               column(3, selectInput("contour_high_color", h6("High color"), choices = colors(), selected = "skyblue")),
@@ -129,7 +138,7 @@ mainPanel(width = 10,
             )
           ),
           conditionalPanel(condition = "(input.contour_customize == true && input.contour_type == 'Point')",
-            wellPanel(style = "background-color: #F7FCF5;",
+            wellPanel(style = "background-color: #D3D3D3;",
             fluidRow(
               # select colors    
               column(3, selectInput("point_high_color", h6("High color"), choices = colors(), selected = "skyblue")),
@@ -138,7 +147,7 @@ mainPanel(width = 10,
             )
           ),
           conditionalPanel(condition = "(input.contour_customize == true && input.contour_type == 'Scatter')",
-            wellPanel(style = "background-color: #F7FCF5;",
+            wellPanel(style = "background-color: #D3D3D3;",
             fluidRow(
               # point options
               column(3, selectInput("scatter_pt_color", h6("Point Color"), choices = colors(), selected = "black")),
@@ -157,8 +166,12 @@ mainPanel(width = 10,
             )
           )
         ),
+        hr(),
         # plot
-        plotOutput("contour_plot")
+        plotOutput("contour_plot_out"),
+        hr(),
+        # export
+        downloadButton("download_contour", "Save ggplot2 object (.RData)")
       )
     ) # END subTabs: parameter plots 
 ), # END TAB: Individual Parameters
@@ -177,17 +190,17 @@ mainPanel(width = 10,
             # median, CI, and density plot
             tabPanel("Parameter plot",
               wellPanel(
-              fluidRow(
-                # select parameters
-                column(5, selectizeInput("params_to_plot", label = h6("Select or enter parameter names"), width = '100%', choices = object@param_names[-which(object@param_names=="lp__")], multiple = TRUE)),
-                # slider for credible interval
-                column(3, offset = 1, sliderInput("CI_level", h6("Credible Interval"), min = 50, max = 95, value = 50, step = 5)),
-                # checkbox to show density
-                column(2, offset = 1, checkboxGroupInput("show_options", label = h6("Display options"), choices = c("95% CI line" = "lines", Density = "density"), selected = "lines"))
-              ),
+                fluidRow(
+                  # select parameters
+                  column(5, selectizeInput("params_to_plot", label = h6("Select or enter parameter names"), width = '100%', choices = object@param_names[-which(object@param_names=="lp__")], multiple = TRUE)),
+                  # slider for credible interval
+                  column(3, offset = 1, sliderInput("CI_level", h6("Credible Interval"), min = 50, max = 95, value = 50, step = 5)),
+                  # checkbox to show density
+                  column(2, offset = 1, checkboxGroupInput("show_options", label = h6("Display options"), choices = c("95% CI line" = "lines", Density = "density"), selected = "lines"))
+                ),
               checkboxInput("param_plot_customize", h6("Customize appearance"), value = FALSE),
                 conditionalPanel(condition = "input.param_plot_customize == true",
-                  wellPanel(style = "background-color: #F7FCF5;",             
+                  wellPanel(style = "background-color: #D3D3D3;",             
                   fluidRow(
                     # select colors    
                     column(3, selectInput("param_plot_fill_color", h6("Density/CI color"), choices = colors(), selected = "gray")),
@@ -199,11 +212,9 @@ mainPanel(width = 10,
                   )
                 )
               ),
-              # help text
-              #helpText("Note: the thin lines are 95% credible intervals around the posterior median. The thick lines show the selected credible interval."),
               hr(),
               # plot
-              plotOutput("plot_param_vertical")
+              plotOutput("plot_param_vertical_out")
             ),
             
             # Rhat plot tab
@@ -211,7 +222,7 @@ mainPanel(width = 10,
               h4(withMathJax("Gelman & Rubin's  \\(\\hat{R}\\)  statistics")),
               helpText("Potential scale reduction factor"),
               hr(),
-              plotOutput("rhatplot")
+              plotOutput("rhat_plot")
             )
           ) # END subTabs: multiparameter plots
         ),
