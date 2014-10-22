@@ -42,17 +42,20 @@ shinyServer(function(input, output) {
   })
 
 #### TABLE: summary stats (single parameter) ####
-  output$parameter_summary <- renderTable({
+  parameter_summary <- reactive({
     do.call(".param_summary", args = list(
       param       = input$param,
-      r_e         = fit_summary[input$param,c("Rhat","n_eff")],
+      r_e         = fit_summary[input$param ,c("Rhat","n_eff")],
       dat         = par_samps_post_warmup(),
       warmup_val  = warmup_val
     ))
-  }, include.rownames = FALSE, display = c("s","f","d",rep("f",5)))
+  })
+  output$parameter_summary_out <- renderTable(parameter_summary(), 
+                                              include.rownames = FALSE, 
+                                              display = c("s","f","d",rep("f",5)))
 
 #### PLOT: trace (single parameter) ####
-  output$trace_plot <- renderPlot({
+  trace_plot <- reactive({
     zoom <- input$tracezoom
     do.call(".param_trace", args = list(
       param       = input$param,
@@ -65,35 +68,56 @@ shinyServer(function(input, output) {
       y2          = ifelse(zoom, input$yzoom[2], NA)
     ))
   })
-
-#### PLOT: density (single parameter) ####
-  output$density_plot <- renderPlot({
-      customize <- input$dens_customize
-      do.call(".param_dens", args = list(
-        param       = input$param,
-        dat         = par_samps_post_warmup(),
-        chain       = input$dens_chain,
-        warmup_val  = warmup_val,
-        fill_color  = ifelse(customize, input$dens_fill_color, "gray35"),
-        line_color  = ifelse(customize, input$dens_line_color, "lightgray"), 
-        point_est   = ifelse(customize, input$dens_point_est, "None"),
-        CI          = ifelse(customize, input$dens_ci, "None"),
-        x_breaks    = ifelse(customize, input$dens_x_breaks, "Some"),
-        y_breaks    = ifelse(customize, input$dens_y_breaks, "Some")
-      )) 
+  output$trace_plot_out <- renderPlot({
+    trace_plot()
   })
 
+  output$download_trace <- downloadHandler(
+    filename = paste0('shiny_stan_trace_',input$param,'.RData'),
+    content = function(file) {
+      shiny_stan_trace <- trace_plot()
+      comment(shiny_stan_trace) <- paste("Trace plot for parameter", input$param)
+      save(shiny_stan_trace, file = file)
+    }
+  )
+
+### PLOT: density (single parameter) ####
+  density_plot <- reactive({
+    customize <- input$dens_customize
+    do.call(".param_dens", args = list(
+      param       = input$param,
+      dat         = par_samps_post_warmup(),
+      chain       = input$dens_chain,
+      fill_color  = ifelse(customize, input$dens_fill_color, "gray35"),
+      line_color  = ifelse(customize, input$dens_line_color, "lightgray"), 
+      point_est   = ifelse(customize, input$dens_point_est, "None"),
+      CI          = ifelse(customize, input$dens_ci, "None"),
+      x_breaks    = ifelse(customize, input$dens_x_breaks, "Some"),
+      y_breaks    = ifelse(customize, input$dens_y_breaks, "Some")
+    )) 
+  })
+  output$density_plot_out <- renderPlot({
+    density_plot()
+  })
+  output$download_density <- downloadHandler(
+    filename = 'shiny_stan_density.RData',
+    content = function(file) {
+      shiny_stan_density <- density_plot()
+      save(shiny_stan_density, file = file)
+    }
+  )
+
 #### PLOT: contour (two parameters) ####
-  output$contour_plot <- renderPlot({
+  contour_plot <- reactive({
     customize <- input$contour_customize
     type <- input$contour_type
     type_contour <- type == "Contour"
     type_point <- type == "Point"
     type_scatter <- type == "Scatter"
     if (customize & type_scatter & input$scatter_ellipse_lev != "None") {
-      validate(need(input$param != input$param2_contour, "Please select a different 2nd parameter to use this option."))
+      validate(need(input$param != input$param2_contour, 
+                    "Please select a different 2nd parameter to use this option."))
     }
-    
     do.call(".param_contour", args = list(
       samps       = samps_post_warmup,
       param       = input$param,
@@ -106,7 +130,7 @@ shinyServer(function(input, output) {
         low_color   = ifelse(customize & type_contour, input$contour_low_color, 
                              ifelse(customize & type_point, input$point_low_color, "navyblue"))
         ),
-      scatter_ops   = list(
+      scatter_ops = list(
         pt_alpha    = ifelse(customize & type_scatter, input$scatter_pt_alpha, 0.35),
         pt_size     = ifelse(customize & type_scatter, input$scatter_pt_size, 2),
         pt_shape    = ifelse(customize & type_scatter, input$scatter_pt_shape, 1),
@@ -116,9 +140,19 @@ shinyServer(function(input, output) {
         ci_lty      = ifelse(customize & type_scatter, input$scatter_ellipse_lty, 1),
         ci_lwd      = ifelse(customize & type_scatter, input$scatter_ellipse_lwd, 1),
         ci_alpha    = ifelse(customize & type_scatter, input$scatter_ellipse_alpha, 1)
-      )
+        )
     ))
   })
+  output$contour_plot_out <- renderPlot({
+    contour_plot()
+  })
+  output$download_contour <- downloadHandler(
+    filename = 'shiny_stan_bivariate.RData',
+    content = function(file) {
+      shiny_stan_bivariate <- contour_plot()
+      save(shiny_stan_bivariate, file = file)
+    }
+  )
 
 #### DATATABLE: summary stats (all parameters) ####
   output$all_summary <- renderDataTable({
@@ -134,9 +168,8 @@ shinyServer(function(input, output) {
     round(400*N/10)
   })
 
-  output$plot_param_vertical <- renderPlot({
+  plot_param_vertical <- reactive({
     customize <- input$param_plot_customize
-  
     do.call(".plot_param_vertical", args = list(
       samps         = samps_post_warmup,
       params        = input$params_to_plot,
@@ -147,11 +180,13 @@ shinyServer(function(input, output) {
       outline_color = ifelse(customize, input$param_plot_outline_color, "black"),
       est_color     = ifelse(customize, input$param_plot_est_color, "black")
     ))
+  })
+  output$plot_param_vertical_out <- renderPlot({
+    plot_param_vertical()
   }, height = calc_height_plot_param_vertical)
 
-
 #### PLOT: Rhat (all parameters) ####
-  output$rhatplot <- renderPlot({
+  output$rhat_plot <- renderPlot({
     .rhat_plot(fit_summary)
   }, height = .calc_height_fixed(param_names))
 
