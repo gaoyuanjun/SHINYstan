@@ -252,12 +252,12 @@ no_lgnd <- theme(legend.position = "none")
     if (show.lines) {
       segments(samps.quantile[,1], y, samps.quantile[,5], y, col = outline_color) 
     }
-    segments(samps.quantile[,2], y, samps.quantile[,4], y, lwd = 3, col = fill_color)
+    segments(samps.quantile[,2], y, samps.quantile[,4], y, lwd = 4, col = fill_color)
     if (point_est == "Median") {
-      points(samps.median, y, pch = 20, cex = 1.25, col = est_color)
+      points(samps.median, y, pch = 20, cex = 1.75, col = est_color)
     }
     if (point_est == "Mean") {
-      points(samps.mean, y, pch = 20, cex = 1.25, col = est_color)
+      points(samps.mean, y, pch = 20, cex = 1.75, col = est_color)
     }
   }
 }
@@ -287,7 +287,7 @@ no_lgnd <- theme(legend.position = "none")
                                 labels = c(expression(hat(R) < 1.05), expression(hat(R) < 1.10),expression(hat(R) > 1.10)))
   axis_text <- theme(axis.text.y = element_text(face = "bold", color = "black"))
   gg_rhat <- ggplot(dat, aes(x = parameter, y = Rhat, ymax = Rhat, color = val))
-  gg_rhat <- (gg_rhat + geom_pointrange(ymin = 1) + 
+  gg_rhat <- (gg_rhat + geom_pointrange(ymin = 1, size = .75) + 
                 y_scale + my_labs + my_clrs + 
                 coord_flip()
               )
