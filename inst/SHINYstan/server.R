@@ -45,9 +45,7 @@ shinyServer(function(input, output) {
   parameter_summary <- reactive({
     do.call(".param_summary", args = list(
       param       = input$param,
-      r_e         = fit_summary[input$param ,c("Rhat","n_eff")],
-      dat         = par_samps_post_warmup(),
-      warmup_val  = warmup_val
+      summary     = fit_summary
     ))
   })
   output$parameter_summary_out <- renderTable(parameter_summary(), 
@@ -57,11 +55,17 @@ shinyServer(function(input, output) {
 #### PLOT: trace (single parameter) ####
   trace_plot <- reactive({
     zoom <- input$tracezoom
+    customize <- input$trace_customize
     do.call(".param_trace", args = list(
       param       = input$param,
       dat         = par_samps_all(),
       chain       = input$trace_chain,
       warmup_val  = warmup_val,
+      inc_warmup  = input$trace_warmup,
+      palette     = input$trace_palette,
+      rect        = ifelse(customize, input$trace_rect, "Samples"),
+      rect_color  = ifelse(customize, input$trace_rect_color, "skyblue"),
+      rect_alpha  = ifelse(customize, input$trace_rect_alpha, 0.15),
       x1          = ifelse(zoom, input$xzoom[1], NA),
       x2          = ifelse(zoom, input$xzoom[2], NA),
       y1          = ifelse(zoom, input$yzoom[1], NA),
@@ -170,11 +174,13 @@ shinyServer(function(input, output) {
 
   plot_param_vertical <- reactive({
     customize <- input$param_plot_customize
-    do.call(".plot_param_vertical", args = list(
+    do.call(".plot_param_vertical_rhat", args = list(
       samps         = samps_post_warmup,
       params        = input$params_to_plot,
       CI.level      = input$CI_level/100,
       show.options  = input$show_options,
+      rhat_values   = fit_summary[, "Rhat"],
+      color_by_rhat = ifelse(customize, input$param_plot_color_by_rhat, FALSE),
       point_est     = ifelse(customize, input$param_plot_point_est, "Median"),
       fill_color    = ifelse(customize, input$param_plot_fill_color, "gray35"),
       outline_color = ifelse(customize, input$param_plot_outline_color, "black"),
@@ -198,5 +204,31 @@ shinyServer(function(input, output) {
       warmup_val      = warmup_val
     ))
   })
+
+
+#### TEXT: SHINYstan credits ####
+  output$SHINYstan_credits <- renderUI({
+    jonah <- "Jonah Gabry"
+    michael <- "Michael Andreae"
+    yuanjun <- "Yuanjun Gao"
+    dongying <- "Dongying Song"
+    HTML(paste(jonah, michael, yuanjun, dongying, sep = '<br/>'))
+  })
+
+#### TEXT: SHINYstan credits ####
+  output$Stan_credits <- renderText({
+    "Stan Development Team, http://mc-stan.org"
+  })
+
+#### TEXT: User's model info ####
+  observe({
+    input$save_user_model_info
+    isolate({
+      if (input$user_model_info != "")
+        shiny_stan_object@user_model_info <<- input$user_model_info
+    })
+  })
+
+
   
 }) # End shinyServer

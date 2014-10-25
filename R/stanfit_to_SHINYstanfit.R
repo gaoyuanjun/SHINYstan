@@ -3,6 +3,7 @@
 #' @export
 #' 
 stanfit_to_SHINYstanfit <- function(stanfit, make = FALSE) {
+  stopifnot(require(rstan))
   if (!inherits(stanfit, "stanfit")) {
     name <- deparse(substitute(stanfit))
     stop(paste(name, "is not a stanfit object."))

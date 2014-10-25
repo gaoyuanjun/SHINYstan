@@ -11,7 +11,8 @@ SHINYstanfit <- setClass("SHINYstanfit",
                                       sampler_params = "list",
                                       nChains = "numeric",
                                       nIter = "numeric",
-                                      nWarmup = "numeric"
+                                      nWarmup = "numeric",
+                                      user_model_info = "character"
                          ))
 
 

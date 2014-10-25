@@ -3,16 +3,16 @@
 \alias{launch_SHINYstan}
 \title{Launch SHINYstan app}
 \usage{
-launch_SHINYstan(stanfit)
+launch_SHINYstan(object)
 }
 \arguments{
-\item{stanfit}{An S4 object of class \code{\link[rstan]{stanfit-class}} (\pkg{rstan}).}
+\item{object}{An object of class \code{stanfit} or \code{SHINYstanfit}.}
 }
 \description{
 This function will create an S4 object of class \code{SHINYstanfit} in the Global Environment
 and then launch the SHINYstan app.
 }
 \seealso{
-\code{\link[rstan]{stan}}
+\code{\link[rstan]{stanfit-class}}, \code{\link[SHINYstan]{SHINYstanfit-class}}
 }
 
