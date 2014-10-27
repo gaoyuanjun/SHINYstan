@@ -96,8 +96,8 @@ shinyServer(function(input, output) {
       line_color  = ifelse(customize, input$dens_line_color, "lightgray"), 
       point_est   = ifelse(customize, input$dens_point_est, "None"),
       CI          = ifelse(customize, input$dens_ci, "None"),
-      x_breaks    = ifelse(customize, input$dens_x_breaks, "Some"),
-      y_breaks    = ifelse(customize, input$dens_y_breaks, "Some")
+      y_breaks    = ifelse(customize, input$dens_y_breaks, "None"),
+      x_breaks    = ifelse(customize, input$dens_x_breaks, "Some")
     )) 
   })
   output$density_plot_out <- renderPlot({
@@ -159,14 +159,18 @@ shinyServer(function(input, output) {
   )
 
 #### DATATABLE: summary stats (all parameters) ####
-  output$all_summary <- renderDataTable({
-    .all_summary(fit_summary)
-  }, options = list(scrollY = 500, scrollX = 500))
+#   output$all_summary <- renderDataTable({
+#     .all_summary(fit_summary)
+#   }, callback='function(oTable) { new FixedHeader(oTable); }')
 
+output$all_summary <- renderDataTable({
+  .all_summary(fit_summary)
+}, options = list(scrollY = 500, scrollX = 500))
 
 #### PLOT: median, CI, and density (multiple parameters) ####
   calc_height_plot_param_vertical <- reactive({
     params <- input$params_to_plot
+    params <- .update_params_with_groups(params, param_names)
     LL <- length(params)
     N <- ifelse(LL < 10, 10, LL)
     round(400*N/10)
@@ -175,16 +179,17 @@ shinyServer(function(input, output) {
   plot_param_vertical <- reactive({
     customize <- input$param_plot_customize
     do.call(".plot_param_vertical_rhat", args = list(
-      samps         = samps_post_warmup,
-      params        = input$params_to_plot,
-      CI.level      = input$CI_level/100,
-      show.options  = input$show_options,
-      rhat_values   = fit_summary[, "Rhat"],
-      color_by_rhat = ifelse(customize, input$param_plot_color_by_rhat, FALSE),
-      point_est     = ifelse(customize, input$param_plot_point_est, "Median"),
-      fill_color    = ifelse(customize, input$param_plot_fill_color, "gray35"),
-      outline_color = ifelse(customize, input$param_plot_outline_color, "black"),
-      est_color     = ifelse(customize, input$param_plot_est_color, "black")
+      samps           = samps_post_warmup,
+      params          = input$params_to_plot,
+      all_param_names = param_names,
+      CI.level        = input$CI_level/100,
+      show.options    = input$show_options,
+      rhat_values     = fit_summary[, "Rhat"],
+      color_by_rhat   = ifelse(customize, input$param_plot_color_by_rhat, FALSE),
+      point_est       = ifelse(customize, input$param_plot_point_est, "Median"),
+      fill_color      = ifelse(customize, input$param_plot_fill_color, "gray35"),
+      outline_color   = ifelse(customize, input$param_plot_outline_color, "black"),
+      est_color       = ifelse(customize, input$param_plot_est_color, "black")
     ))
   })
   output$plot_param_vertical_out <- renderPlot({
@@ -203,6 +208,12 @@ shinyServer(function(input, output) {
       inc_warmup      = input$sampler_warmup,
       warmup_val      = warmup_val
     ))
+  })
+
+
+#### TEXT: Rhat Warnings #### 
+  output$rhat_warnings <- renderText({
+    .rhat_warnings(fit_summary)
   })
 
 
