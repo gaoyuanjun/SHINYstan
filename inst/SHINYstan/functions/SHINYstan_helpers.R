@@ -11,6 +11,53 @@ v_lines <- theme(panel.grid.major = element_line(size = 0.25, linetype = 3, colo
                  panel.grid.major.y = element_blank())
 no_lgnd <- theme(legend.position = "none")
 
+
+# make_param_list ------------------------------------------------------
+.make_param_list <- function(object) {
+  choices <- list()
+  ll <- length(object@param_dims)
+  choices[1:ll] <- ""
+  names(choices) <- object@param_groups
+  for(i in 1:ll) {
+    if (length(object@param_dims[[i]]) == 0) {
+      choices[[i]] <- list(object@param_groups[i])
+    }
+    else {
+      temp <- paste0(object@param_groups[i],"\\[")
+      choices[[i]] <- object@param_names[grep(temp, object@param_names)]
+    }
+  }
+  
+  choices
+}
+
+# make_param_list_with_groups ------------------------------------------------------
+.make_param_list_with_groups <- function(object) {
+  choices <- list()
+  ll <- length(object@param_dims)
+  LL <- sapply(1:ll, function(i) length(object@param_dims[[i]]))
+  
+  choices[1:ll] <- ""
+  names(choices) <- object@param_groups
+  for(i in 1:ll) {
+    if (LL[i] == 0) {
+      choices[[i]] <- list(object@param_groups[i])
+    }
+    else {
+      group <- object@param_groups[i]
+      temp <- paste0(group,"\\[")
+      ch <- object@param_names[grep(temp, object@param_names)]
+      ch_out <- c(ch,  paste0(group,"_as_shiny_stan_group"))
+      names(ch_out) <- c(ch, paste("ALL", group))
+      choices[[i]] <- ch_out
+    }
+  }
+  
+  choices
+}
+
+
+
 # param_trace -------------------------------------------------------------
 .param_trace <- function(param, dat, warmup_val, inc_warmup, chain, palette,
                          rect, rect_color, rect_alpha, x1, x2, y1, y2) {
@@ -120,7 +167,8 @@ no_lgnd <- theme(legend.position = "none")
   if (type == "Point") {
     g <- (g + 
             with(contour_ops, stat_density2d(geom="point", aes(size = ..density.., color = ..density..), contour = FALSE)) +
-            with(contour_ops, scale_color_gradient(low = low_color, high = high_color)))
+            with(contour_ops, scale_color_gradient(low = low_color, high = high_color)) + 
+            with(contour_ops, scale_size_continuous(range = c(0.25, 4.5)  )))
   }
   if (type == "Contour") {
     g <- (g + 
@@ -158,12 +206,32 @@ no_lgnd <- theme(legend.position = "none")
 }
 
 
+
 # plot_param_vertical_rhat ------------------------------------------------------------
-.plot_param_vertical_rhat <- function(samps, params = NULL, show.options,
+.update_params_with_groups <- function(params, all_param_names) {
+  as_group <- grep("_as_shiny_stan_group", params)
+  if (length(as_group) == 0) {
+    return(params)
+  }
+  
+  make_group <- function(group_name) {
+    temp <- paste0(group_name,"\\[")
+    all_param_names[grep(temp, all_param_names)]
+  }
+  single_params <- params[-as_group]
+  grouped_params <- params[as_group]
+  groups <- gsub("_as_shiny_stan_group", "", grouped_params)
+  groups <- sapply(groups, make_group)
+  updated_params <- c(single_params, unlist(groups))
+  updated_params
+}
+
+.plot_param_vertical_rhat <- function(samps, params = NULL, all_param_names, show.options,
                                       CI.level = 0.5, show.level = 0.95, point_est, 
                                       fill_color, outline_color, segment_color, est_color,
                                       rhat_values, color_by_rhat) {
-
+  
+  params <- .update_params_with_groups(params, all_param_names)
   oranges <- c("#FDD0A2", "#FD8D3C", "#A63603")
   rhat_colors <- ifelse(rhat_values < 1.05, oranges[1], 
                         ifelse(rhat_values < 1.1, oranges[2], oranges[3]))
@@ -197,15 +265,15 @@ no_lgnd <- theme(legend.position = "none")
   xlim[1] <- xlim[1] - 0.05 * xrange
   xlim[2] <- xlim[2] + 0.05 * xrange
   ylim <- c(0.5, nParams + 1)
-  par(mar = c(1.5,5,3,1), oma = c(0, 0, 1, 0))
+  par(mar = c(1.5,8,3,1), oma = c(0, 0, 1, 0))
   
   plot(samps.median, y, bty = "n", type = "n", axes = FALSE,
        xlim = xlim, pch = 20, ylim = ylim,
        xlab = "", ylab = "")
-
+  
   abline(h = y, lty = 2, col = "lightgray")
   grid(nx = NULL, ny = 0, lty = 2)
-
+  
   mtext(text = params, side = 2, las = 1, at = y, font = 2)
   axis(side = 3, lwd = 4)
   
@@ -247,13 +315,13 @@ no_lgnd <- theme(legend.position = "none")
     segments(samps.quantile[,2], y, samps.quantile[,4], y, lwd = 4, col = fill_color)
     if (point_est == "Median") {
       for(i in 1:nParams)
-      points(samps.median[i], y[i], pch = 20, cex = 1.75, 
-             col = ifelse(color_by_rhat, rhat_colors[params[i]], est_color))
+        points(samps.median[i], y[i], pch = 20, cex = 1.75, 
+               col = ifelse(color_by_rhat, rhat_colors[params[i]], est_color))
     }
     if (point_est == "Mean") {
       for(i in 1:nParams)
-      points(samps.mean, y, pch = 20, cex = 1.75, 
-             col = ifelse(color_by_rhat, rhat_colors[params[i]], est_color))
+        points(samps.mean, y, pch = 20, cex = 1.75, 
+               col = ifelse(color_by_rhat, rhat_colors[params[i]], est_color))
     }
   }
   
@@ -265,7 +333,6 @@ no_lgnd <- theme(legend.position = "none")
            horiz = T, xpd = T, inset = c(0,0))  
   }
 }
-
 
 # plot_param_vertical ------------------------------------------------------------
 .plot_param_vertical <- function(samps, params = NULL, show.options,
@@ -412,25 +479,16 @@ no_lgnd <- theme(legend.position = "none")
 }
 
 
-
-# make_param_choices ------------------------------------------------------
-.make_param_choices <- function() {
-  choices <- list()
-  param_groups <- object@param_groups
-  param_dims <- object@param_dims
-  for(i in 1:length(param_groups)) {
-    if (length(param_dims[[i]]) == 0) {
-      choices[[i]] <- param_groups[i]
-    }
-    if (length(param_dims[[i]]) == 1) {
-      x <- paste0(param_groups[i],"[",1:param_dims[[i]],"]")
-      choices[[i]] <- x
-    }
-    if (length(param_dims[[i]]) == 2) {
-      x <- paste0(param_groups[i],"[",1:param_dims[[i]][1],",",1:param_dims[[i]][2],"]")
-      choices[[i]] <- x
-    }
+# rhat_warnings -----------------------------------------------------------
+.rhat_warnings <- function(summary) {
+  rhat <- summary[,"Rhat"]
+  warn_params_1 <- names(which(rhat > 1.10))
+  ll <- length(warn_params_1)
+  if (ll == 0) {
+    return("None")
   }
-  names(choices) <- param_groups
-  choices
+  return(warn_params_1)
 }
+
+
+
