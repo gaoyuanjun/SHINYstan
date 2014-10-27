@@ -159,10 +159,6 @@ shinyServer(function(input, output) {
   )
 
 #### DATATABLE: summary stats (all parameters) ####
-#   output$all_summary <- renderDataTable({
-#     .all_summary(fit_summary)
-#   }, callback='function(oTable) { new FixedHeader(oTable); }')
-
 output$all_summary <- renderDataTable({
   .all_summary(fit_summary)
 }, options = list(scrollY = 500, scrollX = 500))
