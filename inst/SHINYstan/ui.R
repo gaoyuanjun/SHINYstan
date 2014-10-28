@@ -143,8 +143,12 @@ mainPanel(width = 10,
         wellPanel(style = "background-color: #D3D3D3;",
           fluidRow(
           # select 2nd parameter
-            column(2, h5("Second parameter")),
-            column(3, selectInput(inputId = "param2_contour", label = "", choices = .make_param_list(object), multiple = FALSE)),
+#             column(2, h5("Second parameter")),
+            column(5, selectizeInput(inputId = "param2_contour", label = "", choices = .make_param_list(object), multiple = FALSE,
+                                  options = list(
+                                    placeholder = 'Select a 2nd parameter',
+                                    onInitialize = I('function() { this.setValue(""); }')
+                                  ))),
           #select type
             column(1, h5("Style")),
             column(2, selectInput("contour_type", label = "", choices = c("Scatter", "Contour", "Point"), selected = "Scatter")),
@@ -283,7 +287,7 @@ mainPanel(width = 10,
          htmlOutput("SHINYstan_credits"),
          br(),
          h3("Stan & RStan"),
-         a("Stan Development Team", href="http://mc-stan.org")
+         a("Stan Development Team", href="http://mc-stan.org/team.html")
     ) # END TAB: credits
 ) # END all tabs
 ) # END mainPanel
