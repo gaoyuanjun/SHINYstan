@@ -178,10 +178,12 @@ output$all_summary <- renderDataTable({
       samps           = samps_post_warmup,
       params          = input$params_to_plot,
       all_param_names = param_names,
-      CI.level        = input$CI_level/100,
-      show.options    = input$show_options,
+      CI.level        = input$param_plot_ci_level/100,
       rhat_values     = fit_summary[, "Rhat"],
+      show_density    = ifelse(customize, input$param_plot_show_density, FALSE),
+      show_ci_line    = ifelse(customize, input$param_plot_show_ci_line, TRUE),
       color_by_rhat   = ifelse(customize, input$param_plot_color_by_rhat, FALSE),
+      rhat_palette    = ifelse(customize, input$param_plot_rhat_palette, "Oranges"),
       point_est       = ifelse(customize, input$param_plot_point_est, "Median"),
       fill_color      = ifelse(customize, input$param_plot_fill_color, "gray35"),
       outline_color   = ifelse(customize, input$param_plot_outline_color, "black"),
@@ -192,10 +194,6 @@ output$all_summary <- renderDataTable({
     plot_param_vertical()
   }, height = calc_height_plot_param_vertical)
 
-#### PLOT: Rhat (all parameters) ####
-  output$rhat_plot <- renderPlot({
-    .rhat_plot(fit_summary)
-  }, height = .calc_height_fixed(param_names))
 
 #### TABLE: summary stats (sampler) ####
   output$sampler_summary <- renderTable({

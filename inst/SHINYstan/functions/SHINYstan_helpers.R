@@ -47,8 +47,8 @@ no_lgnd <- theme(legend.position = "none")
       group <- object@param_groups[i]
       temp <- paste0(group,"\\[")
       ch <- object@param_names[grep(temp, object@param_names)]
-      ch_out <- c(ch,  paste0(group,"_as_shiny_stan_group"))
-      names(ch_out) <- c(ch, paste("ALL", group))
+      ch_out <- c(paste0(group,"_as_shiny_stan_group"), ch)
+      names(ch_out) <- c(paste("ALL", group), ch)
       choices[[i]] <- ch_out
     }
   }
@@ -113,7 +113,7 @@ no_lgnd <- theme(legend.position = "none")
   lclr <- ifelse(is.null(line_color), "lightgray", line_color)
   
   many_breaks <- function(x) pretty(x, n = 15)
-  too_many_breaks <- function(x) pretty(x, n = 45)
+  too_many_breaks <- function(x) pretty(x, n = 35)
   if(x_breaks == "None") x_scale <- scale_x_continuous(breaks = NULL)
   if(x_breaks == "Some") x_scale <- scale_x_continuous()
   if(x_breaks == "Many") x_scale <- scale_x_continuous(breaks = many_breaks) 
@@ -226,19 +226,27 @@ no_lgnd <- theme(legend.position = "none")
   updated_params
 }
 
-.plot_param_vertical_rhat <- function(samps, params = NULL, all_param_names, show.options,
-                                      CI.level = 0.5, show.level = 0.95, point_est, 
-                                      fill_color, outline_color, segment_color, est_color,
-                                      rhat_values, color_by_rhat) {
+.plot_param_vertical_rhat <- function(samps, params = NULL, all_param_names, 
+                                      show_density, show_ci_line, 
+                                      rhat_values, color_by_rhat, rhat_palette,
+                                      CI.level = 0.5, show.level = 0.95, 
+                                      point_est, est_color,
+                                      fill_color, outline_color, segment_color 
+                                      ) {
   
   params <- .update_params_with_groups(params, all_param_names)
-  oranges <- c("#FDD0A2", "#FD8D3C", "#A63603")
-  rhat_colors <- ifelse(rhat_values < 1.05, oranges[1], 
-                        ifelse(rhat_values < 1.1, oranges[2], oranges[3]))
-  names(rhat_colors) <- names(rhat_values)
   
-  show.density <- "density" %in% show.options
-  show.lines <- "lines" %in% show.options
+  Blues <- c("#C6DBEF", "#4292C6", "#08306B")
+  Grays <- c("#D9D9D9", "#737373", "#000000")
+  Greens <- c("#C7E9C0", "#41AB5D", "#00441B")
+  Oranges <- c("#FDD0A2", "#F16913", "#7F2704")
+  Purples <- c("#DADAEB", "#807DBA", "#3F007D")
+  Reds <- c("#FCBBA1", "#EF3B2C", "#67000D")
+  rhat_pal <- get(rhat_palette)
+  rhat_colors <- ifelse(rhat_values < 1.05, rhat_pal[1], 
+                        ifelse(rhat_values < 1.1, rhat_pal[2], rhat_pal[3]))
+  names(rhat_colors) <- names(rhat_values)
+
   
   dim.samps <- dim(samps) #nIter, nChain, nParam
   if(length(params) == 0) {
@@ -277,7 +285,7 @@ no_lgnd <- theme(legend.position = "none")
   mtext(text = params, side = 2, las = 1, at = y, font = 2)
   axis(side = 3, lwd = 4)
   
-  if(show.density){
+  if(show_density){
     for(i in 1:nParams){
       d.temp <- density(samps.use[,i], 
                         from = samps.quantile[i,1],
@@ -309,7 +317,7 @@ no_lgnd <- theme(legend.position = "none")
     }
   }
   else{
-    if (show.lines) {
+    if (show_ci_line) {
       segments(samps.quantile[,1], y, samps.quantile[,5], y, col = outline_color) 
     }
     segments(samps.quantile[,2], y, samps.quantile[,4], y, lwd = 4, col = fill_color)
@@ -329,18 +337,15 @@ no_lgnd <- theme(legend.position = "none")
     par(fig = c(0, 1, 0, 1), oma = c(0, 0, 0, 0), mar = c(0, 0, 0, 0), new = TRUE)
     plot(0, 0, type = "n", bty = "n", xaxt = "n", yaxt = "n")
     legend("topright", legend = c("Rhat:", "< 1.05", "< 1.10", "> 1.10"), 
-           pch = 20, pt.cex = 1.75, box.col = "white", col = c(NA, oranges), 
+             pch = 20, pt.cex = 1.75, box.col = "white", col = c(NA, rhat_pal), 
            horiz = T, xpd = T, inset = c(0,0))  
   }
 }
 
 # plot_param_vertical ------------------------------------------------------------
-.plot_param_vertical <- function(samps, params = NULL, show.options,
+.plot_param_vertical <- function(samps, params = NULL, show_density, show_ci_line,
                                  CI.level = 0.5, show.level = 0.95, point_est,
                                  fill_color, outline_color, segment_color, est_color){
-  
-  show.density <- "density" %in% show.options
-  show.lines <- "lines" %in% show.options
   
   dim.samps <- dim(samps) #nIter, nChain, nParam
   if(length(params) == 0) {
@@ -378,7 +383,7 @@ no_lgnd <- theme(legend.position = "none")
   mtext(text = params, side = 2, las = 1, at = y, font = 2)
   axis(side = 3, lwd = 3)
   
-  if(show.density){
+  if(show_density){
     for(i in 1:nParams){
       d.temp <- density(samps.use[,i], 
                         from = samps.quantile[i,1],
@@ -411,7 +416,7 @@ no_lgnd <- theme(legend.position = "none")
     }
   }
   else{
-    if (show.lines) {
+    if (show_ci_line) {
       segments(samps.quantile[,1], y, samps.quantile[,5], y, col = outline_color) 
     }
     segments(samps.quantile[,2], y, samps.quantile[,4], y, lwd = 4, col = fill_color)

@@ -15,25 +15,24 @@ object <- shiny_stan_object
 # Begin shinyUI -----------------------------------------------------------
 # _________________________________________________________________________
 shinyUI(
-  fluidPage(
+  fluidPage(theme = NULL,
     verticalLayout(
       
 
 # Title -------------------------------------------------------------------
 # _________________________________________________________________________
 fluidRow(
-  #       img(src='stanlogo-main.png', align = "right"),
   column(8, h2(paste("Model:", object@model_name))),
   column(4, h1("SHINYstan"))
 ),
-# br(),
+
 
 
 # Main Panel --------------------------------------------------------------
 # _________________________________________________________________________
 mainPanel(width = 10,
-          
-        
+                
+  tags$style(type='text/css', ".well { padding-bottom: 5px; padding-top: 5px; }"),
   tags$style(type="text/css", "select.shiny-bound-input { font-size:10px; height:25px;}"),
 # tags$style(type="text/css", "input.shiny-bound-input { font-size:10px; width: 45px; height:15px;}"),
   tags$style(type="text/css", "#trace_rect_alpha, #contour_bins, #scatter_pt_alpha, #scatter_pt_size, #scatter_pt_shape, #scatter_ellipse_lty, #scatter_ellipse_lwd, #scatter_ellipse_alpha { font-size:12px; width: 45px; height:15px;}"),
@@ -44,12 +43,13 @@ mainPanel(width = 10,
     
   #### TAB: Individual Parameters ####    
   tabPanel("Invidual Parameters",           
-    wellPanel(style = "background-color: #F0F8FF;",
+    wellPanel(style = "background-color: #F0F8FF; padding-top: 10px;",
     fluidRow(
-      # select parameter
-      column(5, selectizeInput(inputId = "param", label = h4("Select parameter:"), choices = .make_param_list(object), multiple = FALSE)),
-      # summary stats 
-      column(7, tableOutput("parameter_summary_out"))
+      column(2, h4("Select parameter")),
+    # select parameter
+      column(4, selectizeInput(inputId = "param", label = "", choices = .make_param_list(object), multiple = FALSE)),
+    # summary stats 
+      column(6, tableOutput("parameter_summary_out"))
     )),
     
     # display parameter name 
@@ -62,15 +62,15 @@ mainPanel(width = 10,
       tabPanel("Trace",
                plotOutput("trace_plot_out"),
                br(),
-        wellPanel(        
+        wellPanel(style = "background-color: #D3D3D3;",        
           fluidRow(
             column(1, numericInput("trace_chain", label = "", min = 0, max = object@nChains, step = 1, value = 0)),
-            column(3, h5("Chain (0 = all)")),
-            column(3, offset = 1, checkboxInput("trace_warmup", h5("Include warmup"), value = TRUE)),
-            column(4, offset = 0, checkboxInput("trace_customize", h5("Customize appearance"), value = FALSE))
+            column(3, h5("Chain (0 = all chains)")),
+            column(3, checkboxInput("trace_warmup", h5("Include warmup"), value = TRUE)),
+            column(4, offset = 1, checkboxInput("trace_customize", h5("Customize appearance"), value = FALSE))
           ),
         conditionalPanel(condition = "input.trace_customize == true",
-          wellPanel(style = "background-color: #D3D3D3;",
+          wellPanel(
             fluidRow(
             # select colors    
               column(3, selectInput("trace_palette", h6("Color palette"), choices = c("Default", "Brewer (spectral)", "Rainbow", "Gray"), selected = "ggplot Default", selectize=F)),
@@ -81,7 +81,6 @@ mainPanel(width = 10,
             fluidRow(
             # enable trace zoom
               column(3,checkboxInput("tracezoom", label=h6("Enable TraceZoom"), value = FALSE)),
-            # trace zoom description text
               column(9,helpText("TraceZoom allows you to interactively",
                                 "control the range of iterations and values", 
                                 "displayed in the trace plot."))
@@ -89,12 +88,12 @@ mainPanel(width = 10,
             conditionalPanel(condition = "input.tracezoom == true", 
               wellPanel(
               # trace zoom options
-              fluidRow(
+                fluidRow(
               # iterations slider
-                column(3, offset = 1, sliderInput("xzoom", width = '100%', label = h6("Iterations"), min = 0, max = object@nIter, value = c(0, object@nIter))),
+                  column(3, offset = 1, sliderInput("xzoom", width = '100%', label = h6("Iterations"), min = 0, max = object@nIter, value = c(0, object@nIter))),
               # value slider
-                column(7, offset = 1, sliderInput("yzoom", width = '100%', label = h6("Value"), min = -25, max = 25, step = 0.01, value = c(-5, 5)))
-              )
+                  column(7, offset = 1, sliderInput("yzoom", width = '100%', label = h6("Value"), min = -25, max = 25, step = 0.01, value = c(-5, 5)))
+                )
               )
             )
           )
@@ -109,25 +108,25 @@ mainPanel(width = 10,
       tabPanel("Density",
                br(),
                plotOutput("density_plot_out"),
-        wellPanel(
+        wellPanel(style = "background-color: #D3D3D3;",        
           fluidRow(
             column(1, numericInput("dens_chain", label = "", min = 0, max = object@nChains, step = 1, value = 0)),
-            column(3, h5("Chain (0 = all)")),
+            column(3, h5("Chain (0 = all chains)")),
             column(4, offset = 1, checkboxInput("dens_customize", h5("Customize appearance"), value = FALSE))
           ),
           conditionalPanel(condition = "input.dens_customize == true",
-            wellPanel(style = "background-color: #D3D3D3;",
-            fluidRow(
-        # select estimates to show  
-              column(2, selectInput("dens_point_est", h6("Point est."), choices = c("None","Mean","Median","MAP"), selected = "None", selectize = FALSE)),
-              column(2, selectInput("dens_ci", h6("CI pct."), choices = c("None" = "None", "50%" = 0.5, "80%" = 0.8, "95%" = 0.95), selected = "None", selectize = FALSE)),
-        # select colors    
-              column(2, selectInput("dens_fill_color", h6("Density color"), choices = colors(), selected = "gray35", selectize = FALSE)),
-              column(2, selectInput("dens_line_color", h6("Line color"), choices = colors(), selected = "lightgray", selectize = FALSE)),
-        # axis breakpoints      
-              column(2, selectInput("dens_y_breaks", h6("y breaks"), choices = c("None", "Some", "Many", "Too Many"), selected = "None", selectize = FALSE)),
-              column(2, selectInput("dens_x_breaks", h6("x breaks"), choices = c("None", "Some", "Many", "Too Many"), selected = "Some", selectize = FALSE))
-            )
+            wellPanel(
+              fluidRow(
+              # select estimates to show  
+                column(2, selectInput("dens_point_est", h6("Point est."), choices = c("None","Mean","Median","MAP"), selected = "None", selectize = FALSE)),
+                column(2, selectInput("dens_ci", h6("CI pct."), choices = c("None" = "None", "50%" = 0.5, "80%" = 0.8, "95%" = 0.95), selected = "None", selectize = FALSE)),
+              # select colors    
+                column(2, selectInput("dens_fill_color", h6("Density color"), choices = colors(), selected = "gray35", selectize = FALSE)),
+                column(2, selectInput("dens_line_color", h6("Line color"), choices = colors(), selected = "lightgray", selectize = FALSE)),
+              # axis breakpoints      
+                column(2, selectInput("dens_y_breaks", h6("y breaks"), choices = c("None", "Some", "Many", "Too Many"), selected = "None", selectize = FALSE)),
+                column(2, selectInput("dens_x_breaks", h6("x breaks"), choices = c("None", "Some", "Many", "Too Many"), selected = "Some", selectize = FALSE))
+              )
            )
           )
         ),
@@ -141,43 +140,42 @@ mainPanel(width = 10,
                br(),
                # plot
                plotOutput("contour_plot_out"),
-        wellPanel(
+        wellPanel(style = "background-color: #D3D3D3;",
           fluidRow(
-        # select 2nd parameter
-            column(3, selectInput(inputId = "param2_contour", label = "", choices = .make_param_list(object), multiple = FALSE, selectize = FALSE)),
-            column(2, h5("y-axis")),
-            #select type
-            column(2, selectInput("contour_type", label = "", choices = c("Scatter", "Contour", "Point"), selected = "Scatter", selectize = FALSE)),
+          # select 2nd parameter
+            column(2, h5("Second parameter")),
+            column(3, selectInput(inputId = "param2_contour", label = "", choices = .make_param_list(object), multiple = FALSE)),
+          #select type
             column(1, h5("Style")),
+            column(2, selectInput("contour_type", label = "", choices = c("Scatter", "Contour", "Point"), selected = "Scatter")),
             column(4, checkboxInput("contour_customize", h5("Customize appearance"), value = FALSE))
           ),
-#         checkboxInput("contour_customize", h6("Customize appearance"), value = FALSE),
           conditionalPanel(condition = "(input.contour_customize == true && input.contour_type == 'Contour')",
-            wellPanel(style = "background-color: #D3D3D3;",
-            fluidRow(
+            wellPanel(
+              fluidRow(
               # select colors    
-              column(3, selectInput("contour_high_color", h6("High color"), choices = colors(), selected = "skyblue", selectize = FALSE)),
-              column(3, selectInput("contour_low_color", h6("Low color"), choices = colors(), selected = "navyblue", selectize = FALSE)),
+                column(3, selectInput("contour_high_color", h6("High color"), choices = colors(), selected = "skyblue", selectize = FALSE)),
+                column(3, selectInput("contour_low_color", h6("Low color"), choices = colors(), selected = "navyblue", selectize = FALSE)),
               # set binwidth
-              column(2, numericInput("contour_bins", h6("Bins"), value = 10, min = 1))
-            )
+                column(2, numericInput("contour_bins", h6("Bins"), value = 10, min = 1))
+              )
             )
           ),
           conditionalPanel(condition = "(input.contour_customize == true && input.contour_type == 'Point')",
-            wellPanel(style = "background-color: #D3D3D3;",
-            fluidRow(
+            wellPanel(
+              fluidRow(
               # select colors    
-              column(3, selectInput("point_high_color", h6("High color"), choices = colors(), selected = "skyblue", selectize = FALSE)),
-              column(3, selectInput("point_low_color", h6("Low color"), choices = colors(), selected = "navyblue", selectize = FALSE))
-            )
+                column(3, selectInput("point_high_color", h6("High color"), choices = colors(), selected = "skyblue", selectize = FALSE)),
+                column(3, selectInput("point_low_color", h6("Low color"), choices = colors(), selected = "navyblue", selectize = FALSE))
+              )
             )
           ),
           conditionalPanel(condition = "(input.contour_customize == true && input.contour_type == 'Scatter')",
-            wellPanel(style = "background-color: #D3D3D3;",
-            fluidRow(
+            wellPanel(
+              fluidRow(
               # ellipse options
-              column(2, offset=8, h6("Show Ellipse")),
-              column(2, selectInput("scatter_ellipse_lev", label="", choices = c("None" = "None", "50%" = 0.5, "80%" = 0.8, "95%" = 0.95, "99%" = 0.99), selected = "None", selectize = FALSE))
+                column(2, offset=8, h6("Show Ellipse")),
+                column(2, selectInput("scatter_ellipse_lev", label="", choices = c("None" = "None", "50%" = 0.5, "80%" = 0.8, "95%" = 0.95, "99%" = 0.99), selected = "None", selectize = FALSE))
             ),
             fluidRow(
               # point options
@@ -193,9 +191,6 @@ mainPanel(width = 10,
             )
           )
         ),
-#         hr(),
-#         # plot
-#         plotOutput("contour_plot_out"),
         hr(),
         # export
         downloadButton("download_contour", "Save ggplot2 object (.RData)")
@@ -205,58 +200,45 @@ mainPanel(width = 10,
 
   #### TAB: Model ####  
   tabPanel("Model",
-
-    #### subTabs: model stats & plots ####
-    tabsetPanel(type = "tabs", position = "above",
-        
-        # parameter plots tab       
-        tabPanel("Multi-parameter plots",
         
           #### subTabs: multiparameter plots ####
           tabsetPanel(type = "pills",
             # median, CI, and density plot
             tabPanel("Parameter plot",
-              wellPanel(
+              wellPanel(style = "background-color: #D3D3D3;",
                 fluidRow(
-                  # select parameters
-                  column(5, selectizeInput("params_to_plot", label = h6("Select or enter parameter names"), width = '100%', choices = .make_param_list_with_groups(object), multiple = TRUE)),
-                  # slider for credible interval
-                  column(3, offset = 1, sliderInput("CI_level", h6("Credible Interval"), min = 50, max = 95, value = 50, step = 5)),
-                  # checkbox to show density
-                  column(2, offset = 1, checkboxGroupInput("show_options", label = h6("Display options"), choices = c("95% CI line" = "lines", Density = "density"), selected = "lines"))
+                  column(5, selectizeInput("params_to_plot", label = h5("Select or enter parameter names"), width = '100%', choices = .make_param_list_with_groups(object), multiple = TRUE)),
+                  column(3, offset = 1, sliderInput("param_plot_ci_level", h5("Credible Interval"), min = 50, max = 95, value = 50, step = 5)),
+                  column(2, offset=1, checkboxInput("param_plot_customize", h5("Customize appearance"), value = FALSE))
                 ),
-              checkboxInput("param_plot_customize", h6("Customize appearance"), value = FALSE),
                 conditionalPanel(condition = "input.param_plot_customize == true",
-                  wellPanel(style = "background-color: #D3D3D3;",
-                            checkboxInput("param_plot_color_by_rhat", "Color by Rhat Value", FALSE),
-                  fluidRow(
-                    # select colors    
-                    column(2, selectInput("param_plot_fill_color", h6("Density/CI color"), choices = colors(), selected = "gray35", selectize = FALSE)),
-                    column(2, selectInput("param_plot_outline_color", h6("Outline color"), choices = colors(), selected = "black", selectize = FALSE)),
-                    column(2, selectInput("param_plot_est_color", h6("Point est. color"), choices = colors(), selected = "black", selectize = FALSE)),
-                    # select point estimate
-                    column(2, selectInput("param_plot_point_est", h6("Point est. value"), choices = c("Median", "Mean"), selected = "Median", selectize = FALSE))
-                  )
+                  wellPanel(
+                    fluidRow(
+                      column(2, checkboxInput("param_plot_show_density", h6("Show density"), value = FALSE)),
+                      column(3, checkboxInput("param_plot_show_ci_line", h6("Show 95% line"), value = TRUE)),
+                      column(3, checkboxInput("param_plot_color_by_rhat", h6("Color by Rhat Value"), FALSE))
+                    ),
+                    fluidRow(
+                      column(2, selectInput("param_plot_fill_color", h6("Density/CI color"), choices = colors(), selected = "gray35", selectize = FALSE)),
+                      column(2, selectInput("param_plot_outline_color", h6("Outline color"), choices = colors(), selected = "black", selectize = FALSE)),
+                      column(2, selectInput("param_plot_est_color", h6("Point est. color"), choices = colors(), selected = "black", selectize = FALSE)),
+                      column(2, selectInput("param_plot_point_est", h6("Point est. value"), choices = c("Median", "Mean"), selected = "Median", selectize = FALSE)),
+                      column(3, conditionalPanel(condition = "input.param_plot_color_by_rhat == true", 
+                                                 selectInput("param_plot_rhat_palette", h6("Rhat colors"), choices = c("Blues", "Grays", "Greens", "Oranges", "Purples", "Reds"), selected = "Blues", selectize=FALSE)))
+                    )
                   )
                 )
               ),
               hr(),
               # plot
               plotOutput("plot_param_vertical_out")
-            )
-          ) 
-        ), # END subTabs: multiparameter plots
+            ),
         
         # Summary stats tab        
         tabPanel("Posterior summary statistics",
           br(),
           # data table
-          dataTableOutput("all_summary"),
-          tags$head( 
-            tags$style(type='text/css', '.fixedHeader table.table thead 
-.sorting { background-color: #eee; }'), 
-            tags$script(src='dataTables.fixedHeader.js') 
-          ) 
+          dataTableOutput("all_summary") 
         )
         
       ) # END subTabs: model stats & plots 
@@ -274,27 +256,25 @@ mainPanel(width = 10,
     tabPanel("Warnings", 
          h4("The following parameters have Rhat values above 1.1:"),
          br(),
-         textOutput("rhat_warnings"),
-         br(),
-         h3("Trace Warnings")
+         textOutput("rhat_warnings")
     ), # END TAB: warnings
 
-    #### TAB: Info ####  
+    #### TAB: Notes ####  
     tabPanel("Notes",
       br(),
       helpText("Use this space to store notes about your model. ", 
                "The text will be saved in the user_model_info slot of",
-               "the shiny_stan_object and displayed here next time SHINYstan",
+               "the shiny_stan_object and displayed here each time SHINYstan",
                "is launched with this shiny_stan_object."),
       br(),
       tags$textarea(id="user_model_info", style = "width: 500px;", rows=10, cols=60, shiny_stan_object@user_model_info),
       br(),
       actionButton("save_user_model_info", label = "Save Changes"),
-      hr(),
-      h6("Why use this feature?"),
-      helpText("If you want to allow other users to explore your model with",
-               "SHINYstan, you can send them your shiny_stan_object and they",
-               "will see any comments you've saved.")
+      hr()
+#       h6("Why use this feature?"),
+#       helpText("If you want to allow other users to explore your model with",
+#                "SHINYstan, you can send them your shiny_stan_object and they",
+#                "will see any comments you've saved.")
     ), # END TAB: info
     
     #### TAB: Credits ####  
