@@ -1,24 +1,24 @@
 Package: SHINYstan
-Title: Shiny app for exploring Stan models
+Title: SHINYstan: Shiny app for exploring MCMC output
 Version: 0.1
-Authors@R: c(person("Jonah Gabry", "Developer", role = c("aut","cre"),
-    email = "jsg2201@columbia.edu"),
-    person("Yuanjun Gao", "Developer", role = "aut",
-    email = "yg2312@columbia.edu"),
-    person("Dongying Song", "Developer", role = "aut",
-    email = "ds3268@columbia.edu"),
-    person("Michael Andreae", "Developer", role = "aut",
-    email = "ma2196@columbia.edu"))
+Author: Jonah Gabry <jsg2201@columbia.edu>,
+    Yuanjun Gao <yg2312@columbia.edu>,
+    Dongying Song <ds3268@columbia.edu>,
+    Michael Andreae <ma2196@columbia.edu>,
+    Stan Development Team <mc-stan.org>
 Maintainer: Jonah Gabry <jsg2201@columbia.edu>
-Description: Shiny app for exploring Stan models
+Description: Shiny app for exploring MCMC output.
 URL: http://mc-stan.org
 Depends:
     R (>= 3.1.1),
-    shiny,
-    rstan,
     ggplot2,
-    plyr,
     grid,
-    reshape2
-License: MIT
+    plyr,
+    reshape2,
+    shiny,
+    stringr
+License: GPL (>=3)
 LazyData: true
+Suggests:
+    rstan,
+    coda
