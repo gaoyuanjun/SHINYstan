@@ -14,8 +14,7 @@ iterations, chains, and parameters, in that order.}
 
 \item{param_dims}{The dimensions for all parameters. A named list.}
 
-\item{The}{number of warmup/burnin iterations. Not needed if the
-samples don't include any of the burnin.}
+\item{The}{number of warmup/burnin iterations. Not needed if the samples don't include any of the burnin.}
 }
 \description{
 Convert an array of posterior samples to class \code{shinystan}

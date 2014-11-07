@@ -2,8 +2,7 @@
 #'
 #' @param X An \code{mcmc.list}
 #' @param model_name A character string given a name for the model.
-#' @param The number of warmup/burnin iterations. Not needed if the
-#' samples don't include any of the burnin.
+#' @param The number of warmup/burnin iterations. Not needed if the samples don't include any of the burnin.
 #' @param param_dims The dimensions for all parameters. A named list.
 #' @export
 #' @seealso \code{\link[coda]{mcmc.list}}

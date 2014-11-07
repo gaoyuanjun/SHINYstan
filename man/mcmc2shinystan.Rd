@@ -13,8 +13,7 @@ mcmc2shinystan(X, model_name = deparse(substitute(X)), burnin = 0,
 
 \item{param_dims}{The dimensions for all parameters. A named list.}
 
-\item{The}{number of warmup/burnin iterations. Not needed if the
-samples don't include any of the burnin.}
+\item{The}{number of warmup/burnin iterations. Not needed if the samples don't include any of the burnin.}
 }
 \description{
 Convert an object of class \code{mcmc.list} to class \code{shinystan}
