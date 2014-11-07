@@ -1,6 +1,6 @@
-#' An S4 class for \code{SHINYstanfit} objects
+#' An S4 class for \code{shinystan} objects
 #'
-SHINYstanfit <- setClass("SHINYstanfit",
+shinystan <- setClass("shinystan",
                       # Slots
                          slots = list(model_name = "character",
                                       param_names = "character",
