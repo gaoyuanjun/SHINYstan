@@ -234,7 +234,7 @@ no_lgnd <- theme(legend.position = "none")
   if(length(params) == 0) {
     params <- dimnames(samps)$parameters[1:min(10, dim.samps[3])]
   }
-
+  params <- unique(params)
   Blues <- c("#C6DBEF", "#4292C6", "#08306B")
   Grays <- c("#D9D9D9", "#737373", "#000000")
   Greens <- c("#C7E9C0", "#41AB5D", "#00441B")

@@ -15,8 +15,7 @@ Depends:
     grid,
     plyr,
     reshape2,
-    shiny,
-    stringr
+    shiny
 License: GPL (>=3)
 LazyData: true
 Suggests:
