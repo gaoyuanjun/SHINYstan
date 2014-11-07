@@ -4,11 +4,11 @@ SHINYstan
 Shiny app for Stan models (work in progress). 
 
 
-# Installation instructions:
+# Getting started:
 
 1. Install "devtools" R package: install.packages("devtools")
 
-2. Use the install_github function in "devtools" package to install SHINYstan: install_github("jgabry/SHINYstan")
+2. Use devtools::install_github("jgabry/SHINYstan") to install the SHINYstan R package
 
 3. Load the SHINYstan package: library(SHINYstan)
 
