@@ -15,21 +15,33 @@
 #'   \item{\code{pumps}}{Conjugate gamma-Poisson hierarchical model}
 #' } 
 #' 
+#' @return In addition to launching the app, an object of class \code{SHINYstanfit}
+#' is returned.  
 #' @seealso \code{\link[rstan]{stan_demo}} 
 #' @export
 #' @examples
 #' \dontrun{
-#' launch_SHINYstan_demo("eight_schools")
+#' launch_shinystan_demo() # launches "eight_schools" demo by default
+#' launch_shinystan_demo("air")
 #' }
 #' 
-launch_SHINYstan_demo <- function(demo_name) {
-  if (missing(demo_name)) {
-    do.call("stanfit_to_SHINYstanfit", list(stanfit = eight_schools, make = TRUE))
-    shiny::runApp(system.file("SHINYstan", package = "SHINYstan"))  
-  } else {
-    demo_name <- get(demo_name)
-    do.call("stanfit_to_SHINYstanfit", list(stanfit = demo_name, make = TRUE))
+launch_shinystan_demo <- function(demo_name = "eight_schools") {    
+  launch_demo <- function(object) {
+    shiny_stan_object <<- object  
     shiny::runApp(system.file("SHINYstan", package = "SHINYstan"))  
   }
+  cleanup_shiny_stan <- function(shiny_stan_object, out_name) {
+    assign(out_name, shiny_stan_object, inherits = TRUE)
+    shiny_stan_object <<- NULL
+    rm(list = "shiny_stan_object", envir = globalenv())
+  }
+  
+  out_name <- paste0("shinystan_demo_", demo_name)
+  on.exit(cleanup_shiny_stan(shiny_stan_object, out_name))
+    
+  if (demo_name == "air") launch_demo(air_demo_shiny_stan)
+  if (demo_name == "beetles") launch_demo(beetles_demo_shiny_stan)
+  if (demo_name == "eight_schools") launch_demo(eight_schools_demo_shiny_stan)
+  if (demo_name == "pumps") launch_demo(pumps_demo_shiny_stan)
 }
 
