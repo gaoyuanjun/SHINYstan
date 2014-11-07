@@ -3,8 +3,8 @@
 \alias{array2shinystan}
 \title{Convert an array of posterior samples to class \code{SHINYstanfit}}
 \usage{
-array2shinystan(X, info = list(model_name = deparse(substitute(X)), burnin =
-  0, param_groups = "", param_dims = list()))
+array2shinystan(X, info = list(model_name = "unnamed model", burnin =
+  0, param_dims = list()))
 }
 \arguments{
 \item{X}{A 3D array of posterior samples, where the dimensions are
