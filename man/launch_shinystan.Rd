@@ -6,20 +6,20 @@
 launch_shinystan(object, ...)
 }
 \arguments{
-\item{object}{An object of class \code{SHINYstanfit} or \code{stanfit}.}
+\item{object}{An object of class \code{shinystan} or \code{stanfit}.}
 
 \item{...}{Further arguments to be passed to \code{\link[SHINYstan]{stan2shinystan}}
 if \code{object} is a \code{stanfit} object.}
 }
 \value{
 If \code{object} is a \code{stanfit} object, in addition to launching
-the app an object of class \code{SHINYstanfit} is returned.
+the app an object of class \code{shinystan} is returned.
 }
 \description{
-This function will create an S4 object of class \code{SHINYstanfit} in the
+This function will create an S4 object of class \code{shinystan} in the
 Global Environment and launch the SHINYstan app.
 }
 \seealso{
-\code{\link[rstan]{stanfit-class}}, \code{\link[SHINYstan]{SHINYstanfit-class}}
+\code{\link[rstan]{stan}}
 }
 

@@ -9,7 +9,7 @@ Author: Jonah Gabry <jsg2201@columbia.edu>,
 Maintainer: Jonah Gabry <jsg2201@columbia.edu>
 Description: Shiny app for exploring MCMC output.
 URL: http://mc-stan.org
-Depends: 
+Depends:
     R (>= 3.1.1),
     ggplot2,
     grid,
@@ -19,7 +19,7 @@ Depends:
     stringr
 License: GPL (>=3)
 LazyData: true
-Suggests: 
+Suggests:
     rstan,
     coda,
     testthat
