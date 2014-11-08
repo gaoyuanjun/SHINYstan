@@ -10,11 +10,11 @@ array2shinystan(X, model_name = "unnamed model", burnin = 0,
 \item{X}{A 3D array of posterior samples, where the dimensions are
 iterations, chains, and parameters, in that order.}
 
-\item{model_name}{A character string given a name for the model.}
+\item{model_name}{A character string giving a name for the model.}
+
+\item{burnin}{The number of warmup/burnin iterations. Not needed if the samples don't include any of the burnin.}
 
 \item{param_dims}{The dimensions for all parameters. A named list.}
-
-\item{The}{number of warmup/burnin iterations. Not needed if the samples don't include any of the burnin.}
 }
 \description{
 Convert an array of posterior samples to class \code{shinystan}

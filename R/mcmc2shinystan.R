@@ -1,7 +1,7 @@
 #' Convert an object of class \code{mcmc.list} to class \code{shinystan}
 #'
 #' @param X An \code{mcmc.list}
-#' @param model_name A character string given a name for the model.
+#' @param model_name A character string giving a name for the model.
 #' @param burnin The number of warmup/burnin iterations. Not needed if the samples don't include any of the burnin.
 #' @param param_dims The dimensions for all parameters. A named list.
 #' @export

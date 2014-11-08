@@ -9,11 +9,11 @@ mcmc2shinystan(X, model_name = deparse(substitute(X)), burnin = 0,
 \arguments{
 \item{X}{An \code{mcmc.list}}
 
-\item{model_name}{A character string given a name for the model.}
+\item{model_name}{A character string giving a name for the model.}
+
+\item{burnin}{The number of warmup/burnin iterations. Not needed if the samples don't include any of the burnin.}
 
 \item{param_dims}{The dimensions for all parameters. A named list.}
-
-\item{The}{number of warmup/burnin iterations. Not needed if the samples don't include any of the burnin.}
 }
 \description{
 Convert an object of class \code{mcmc.list} to class \code{shinystan}
