@@ -42,6 +42,57 @@ mainPanel(width = 10,
 
   tabsetPanel(type = "tabs", position = "above",
 
+
+    #### TAB: Model ####
+    tabPanel("Model",
+
+             #### subTabs: multiparameter plots ####
+             tabsetPanel(type = "pills",
+                         # median, CI, and density plot
+                         tabPanel("PLOT",
+                                  wellPanel(style = "background-color: #D3D3D3;",
+                                            fluidRow(
+                                              column(5, selectizeInput("params_to_plot", label = h5("Select or enter parameter names"), width = '100%', choices = .make_param_list_with_groups(object), multiple = TRUE)),
+                                              column(3, offset = 1, sliderInput("param_plot_ci_level", h5("Credible Interval"), min = 50, max = 95, value = 50, step = 5)),
+                                              column(2, offset =1,  checkboxInput("param_plot_customize", h5("Customize appearance"), value = FALSE))
+                                            ),
+                                            conditionalPanel(condition = "input.param_plot_customize == true",
+                                                             wellPanel(
+                                                               fluidRow(
+                                                                 column(2, checkboxInput("param_plot_show_density", h6("Show density"), value = FALSE)),
+                                                                 column(3, checkboxInput("param_plot_show_ci_line", h6("Show 95% line"), value = TRUE)),
+                                                                 column(3, checkboxInput("param_plot_color_by_rhat", h6("Color by Rhat Value"), FALSE))
+                                                               ),
+                                                               fluidRow(
+                                                                 column(2, selectInput("param_plot_fill_color", h6("Density/CI color"), choices = colors(), selected = "gray35", selectize = FALSE)),
+                                                                 column(2, selectInput("param_plot_outline_color", h6("Outline color"), choices = colors(), selected = "black", selectize = FALSE)),
+                                                                 column(2, offset=1, selectInput("param_plot_point_est", h6("Point est. value"), choices = c("Median", "Mean"), selected = "Median", selectize = FALSE)),
+                                                                 conditionalPanel(condition = "input.param_plot_color_by_rhat == false",
+                                                                                  column(2, selectInput("param_plot_est_color", h6("Point est. color"), choices = colors(), selected = "black", selectize = FALSE))),
+                                                                 conditionalPanel(condition = "input.param_plot_color_by_rhat == true",
+                                                                                  column(2, selectInput("param_plot_rhat_palette", h6("Rhat colors"), choices = c("Blues", "Grays", "Greens", "Oranges", "Purples", "Reds"), selected = "Blues", selectize=FALSE)))
+                                                               )
+                                                             )
+                                            )
+                                  ),
+                                  hr(),
+                                  # plot
+                                  plotOutput("plot_param_vertical_out"),
+                                  hr(),
+                                  # export
+                                  downloadButton("download_param_plot", "Save ggplot2 object (.RData)")
+                         ),
+
+                         # Summary stats tab
+                         tabPanel("STATS",
+                                  br(),
+                                  # data table
+                                  dataTableOutput("all_summary")
+                         )
+
+             ) # END subTabs: model stats & plots
+    ), # END TAB: model
+
     #### TAB: Individual Parameters ####
     tabPanel("Individual Parameters",
              wellPanel(style = "background-color: #F0F8FF; padding-top: 10px;",
@@ -133,16 +184,18 @@ mainPanel(width = 10,
 
                          ## Contour plot tab ##
                          tabPanel("Bivariate",
-                                  br(),
+                                  # select 2nd parameter
+                                  fluidRow(
+                                    column(3, h5("Second parameter")),
+                                    column(6, selectizeInput(inputId = "param2_contour", label = "", choices = .make_param_list(object), multiple = FALSE))
+                                  ),
                                   # plot
                                   plotOutput("contour_plot_out"),
                                   wellPanel(style = "background-color: #D3D3D3;",
                                             fluidRow(
-                                              column(2, h5("Second parameter")),
-                                              column(5, selectizeInput(inputId = "param2_contour", label = "", choices = .make_param_list(object), multiple = FALSE)),
                                               column(1, h5("Style")),
-                                              column(2, selectInput("contour_type", label = "", choices = c("Scatter", "Contour", "Point"), selected = "Scatter")),
-                                              column(4, checkboxInput("contour_customize", h5("Customize appearance"), value = FALSE))
+                                              column(3, selectInput("contour_type", label = "", choices = c("Scatter", "Contour", "Point"), selected = "Scatter")),
+                                              column(4, offset=1, checkboxInput("contour_customize", h5("Customize appearance"), value = FALSE))
                                             ),
                                             conditionalPanel(condition = "(input.contour_customize == true && input.contour_type == 'Contour')",
                                                              wellPanel(
@@ -188,60 +241,6 @@ mainPanel(width = 10,
              ) # END subTabs: parameter plots
     ), # END TAB: Individual Parameters
 
-
-
-    #### TAB: Model ####
-    tabPanel("Model",
-
-             #### subTabs: multiparameter plots ####
-             tabsetPanel(type = "pills",
-                         # median, CI, and density plot
-                         tabPanel("PLOT",
-                                  wellPanel(style = "background-color: #D3D3D3;",
-                                            fluidRow(
-                                              column(5, selectizeInput("params_to_plot", label = h5("Select or enter parameter names"), width = '100%', choices = .make_param_list_with_groups(object), multiple = TRUE)),
-                                              column(3, offset = 1, sliderInput("param_plot_ci_level", h5("Credible Interval"), min = 50, max = 95, value = 50, step = 5)),
-                                              column(2, offset =1,  checkboxInput("param_plot_customize", h5("Customize appearance"), value = FALSE))
-                                            ),
-                                            conditionalPanel(condition = "input.param_plot_customize == true",
-                                                             wellPanel(
-                                                               fluidRow(
-                                                                 column(2, checkboxInput("param_plot_show_density", h6("Show density"), value = FALSE)),
-                                                                 column(3, checkboxInput("param_plot_show_ci_line", h6("Show 95% line"), value = TRUE)),
-                                                                 column(3, checkboxInput("param_plot_color_by_rhat", h6("Color by Rhat Value"), FALSE))
-                                                               ),
-                                                               fluidRow(
-                                                                 column(2, selectInput("param_plot_fill_color", h6("Density/CI color"), choices = colors(), selected = "gray35", selectize = FALSE)),
-                                                                 column(2, selectInput("param_plot_outline_color", h6("Outline color"), choices = colors(), selected = "black", selectize = FALSE)),
-                                                                 column(2, offset=1, selectInput("param_plot_point_est", h6("Point est. value"), choices = c("Median", "Mean"), selected = "Median", selectize = FALSE)),
-                                                                 conditionalPanel(condition = "input.param_plot_color_by_rhat == false",
-                                                                                  column(2, selectInput("param_plot_est_color", h6("Point est. color"), choices = colors(), selected = "black", selectize = FALSE))),
-                                                                 conditionalPanel(condition = "input.param_plot_color_by_rhat == true",
-                                                                                  column(2, selectInput("param_plot_rhat_palette", h6("Rhat colors"), choices = c("Blues", "Grays", "Greens", "Oranges", "Purples", "Reds"), selected = "Blues", selectize=FALSE)))
-                                                               )
-                                                             )
-                                            )
-                                  ),
-                                  hr(),
-                                  # plot
-                                  plotOutput("plot_param_vertical_out"),
-                                  hr(),
-                                  # export
-                                  downloadButton("download_param_plot", "Save ggplot2 object (.RData)")
-                         ),
-
-                         # Summary stats tab
-                         tabPanel("STATS",
-                                  br(),
-                                  # data table
-                                  dataTableOutput("all_summary")
-                         )
-
-             ) # END subTabs: model stats & plots
-    ), # END TAB: model
-
-
-
     #### TAB: Sampler ####
     tabPanel("Sampler Parameters",
              h3("Average value of sampler parameters"),
@@ -254,6 +253,8 @@ mainPanel(width = 10,
 
     #### TAB: Warnings ####
     tabPanel("Warnings",
+             helpText("This tab displays things that seem to have gone wrong during sampling.", "REPLACE THIS TEXT WITH SOMETHING BETTER"),
+             br(),br(),
              h4("The following parameters have Rhat values above 1.1:"),
              br(),
              textOutput("rhat_warnings")
