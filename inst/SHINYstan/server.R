@@ -78,7 +78,7 @@ shinyServer(function(input, output) {
   source("server_files/multiparameter_plot_gg_reactive.R", local = TRUE)
   output$plot_param_vertical_out <- renderPlot({
     plot_param_vertical()
-  }, height = calc_height_param_plot)
+  }, width = 650, height = calc_height_param_plot)
 
   output$download_param_plot <- downloadHandler(
     filename = 'shiny_stan_param_plot.RData',
