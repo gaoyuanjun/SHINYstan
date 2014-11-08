@@ -7,7 +7,7 @@ contour_plot <- reactive({
   type_scatter <- type == "Scatter"
   if (customize & type_scatter & input$scatter_ellipse_lev != "None") {
     validate(need(input$param != input$param2_contour,
-                  "Please select a different 2nd parameter to use this option."))
+                  "For this option the x and y can't be the same parameter."))
   }
   do.call(".param_contour", args = list(
     samps       = samps_post_warmup,
