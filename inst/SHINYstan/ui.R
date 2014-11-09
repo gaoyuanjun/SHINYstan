@@ -38,7 +38,7 @@ mainPanel(width = 10,
 # tags$style(type="text/css", "input.shiny-bound-input { font-size:10px; width: 45px; height:15px;}"),
   tags$style(type="text/css", "#trace_rect_alpha, #contour_bins, #scatter_pt_alpha, #scatter_pt_size, #scatter_pt_shape, #scatter_ellipse_lty, #scatter_ellipse_lwd, #scatter_ellipse_alpha { font-size:12px; width: 45px; height:15px;}"),
   tags$style(type="text/css", "#param2_contour, #contour_type { font-size:10px; height:25px;}"),
-
+  tags$style(type="text/css", "#stats_digits {width: 40px;}"),
 
   tabsetPanel(type = "tabs", position = "above",
 
@@ -46,9 +46,9 @@ mainPanel(width = 10,
     #### TAB: Model ####
     tabPanel("Model",
 
-             #### subTabs: multiparameter plots ####
+             #### subTabs ####
              tabsetPanel(type = "pills",
-                         # median, CI, and density plot
+                         #### multiparameter plots ####
                          tabPanel("PLOT",
                                   wellPanel(style = "background-color: #D3D3D3;",
                                             fluidRow(
@@ -83,11 +83,18 @@ mainPanel(width = 10,
                                   downloadButton("download_param_plot", "Save ggplot2 object (.RData)")
                          ),
 
-                         # Summary stats tab
+                         #### summary stats ####
                          tabPanel("STATS",
-                                  br(),
+                                  fluidRow(
+                                    column(2, h5("Decimal places")),
+                                    column(1, numericInput("stats_digits", label = "", value = 2, min = 0, max = 6, step = 1)),
+                                    column(7, offset = 2, helpText("Note: parameters with Rhat values above 1.1 are colored red."))
+                                  ),
+                                  hr(),
                                   # data table
-                                  dataTableOutput("all_summary")
+                                  dataTableOutput("all_summary_out"),
+                                  # export
+                                  downloadButton("download_summary_stats", "Save summary stats (.RData)")
                          )
 
              ) # END subTabs: model stats & plots

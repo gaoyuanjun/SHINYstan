@@ -70,9 +70,33 @@ shinyServer(function(input, output) {
 
 
 #### DATATABLE: summary stats (all parameters) ####
-  output$all_summary <- renderDataTable({
-    .all_summary(fit_summary)
-  }, options = list(scrollY = 500, scrollX = 500))
+  source("server_files/summary_stats_reactive.R", local = TRUE)
+  output$all_summary_out <- renderDataTable({
+    summary_stats()
+  }, options = list(
+    pageLength = 10,
+    lengthMenu = list(c(5, 10, 20, 50, -1), c('5', '10', '20', '50', 'All')),
+    columnDefs = list(list(targets = c(2:11) - 1, searchable = FALSE)),
+    orderClasses = TRUE,
+    scrollCollapse = TRUE,
+    rowCallback = I(
+      'function(row, data) {
+        // color in red the names of parameters with rhats >= 1.1
+        if (parseFloat(data[1]) >= 1.1)
+         $("td:eq(0)", row).css("color", "red");
+        if (parseFloat(data[1]) >= 1.1)
+         $("td:eq(1)", row).css("color", "red");
+      }'
+    )))
+  output$download_summary_stats <- downloadHandler(
+    filename = 'shiny_stan_summary_stats.RData',
+    content = function(file) {
+      shiny_stan_summary_stats <- summary_stats()[,-1]
+      save(shiny_stan_summary_stats, file = file)
+    }
+  )
+
+
 
 #### PLOT: median, CI, and density (multiple parameters) ####
   source("server_files/multiparameter_plot_gg_reactive.R", local = TRUE)

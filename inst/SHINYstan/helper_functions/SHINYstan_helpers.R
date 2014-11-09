@@ -203,14 +203,34 @@ no_lgnd <- theme(legend.position = "none")
 
 
 # all_summary -------------------------------------------------------------
-.all_summary <- function(fit_summary) {
-  out <- round(fit_summary, 2)
+.all_summary <- function(fit_summary, digits = 2) {
+  order <- c("Rhat", "n_eff", "mean", "se_mean", "sd",
+             "2.5%", "25%", "50%", "75%", "97.5%")
+  out <- round(fit_summary[,order], digits)
   out[,"n_eff"] <- round(out[,"n_eff"])
-  nc <- ncol(out)
-  out <- out[,c(nc, nc-1, 1:(nc-2))]
   cbind(Parameter = rownames(out), out)
 }
 
+
+
+# update parameter selection for multi-parameter plot
+.update_params_with_groups <- function(params, all_param_names) {
+  as_group <- grep("_as_shiny_stan_group", params)
+  if (length(as_group) == 0) {
+    return(params)
+  }
+
+  make_group <- function(group_name) {
+    temp <- paste0(group_name,"\\[")
+    all_param_names[grep(temp, all_param_names)]
+  }
+  single_params <- params[-as_group]
+  grouped_params <- params[as_group]
+  groups <- gsub("_as_shiny_stan_group", "", grouped_params)
+  groups <- sapply(groups, make_group)
+  updated_params <- c(single_params, unlist(groups))
+  updated_params
+}
 
 # plot_param_vertical_gg
 .plot_param_vertical_gg <- function(samps,
@@ -243,10 +263,14 @@ no_lgnd <- theme(legend.position = "none")
   Reds <- c("#FCBBA1", "#EF3B2C", "#67000D")
   rhat_pal <- get(rhat_palette)
   rhat_id <- ifelse(rhat_values < 1.05, "A",
-                      ifelse(rhat_values < 1.1, "B", "C"))
+                    ifelse(rhat_values < 1.1, "B", "C"))
   rhat_id <- factor(rhat_id[params], levels = c("A","B", "C"), labels = c("<1.05", "<1.1", ">1.1"))
-  rhat_colors <- scale_color_manual(values = rhat_pal)
-
+  rhat_colors <- scale_color_manual(name = bquote(hat(R)),
+                                    values = rhat_pal,
+                                    drop = FALSE)
+  rhat_lgnd <- theme(legend.position = "top",
+                     legend.title = element_text(size = 13, face = "bold"),
+                     legend.text = element_text(size = 12))
 
   nParams <- length(params)
   nIter <- dim.samps[1] * dim.samps[2]
@@ -283,6 +307,7 @@ no_lgnd <- theme(legend.position = "none")
                    legend.position = "none",
                    panel.grid.major = element_line(size = 0.4))
   p.all <- p.base + p.name + theme_bw() + p.theme + xlim(xlim.use)
+
   if (show_ci_line | show_density) {
     p.ci <- geom_segment(aes(x = ll, xend = hh, y = y, yend = y),
                          colour = outline_color)
@@ -328,7 +353,7 @@ no_lgnd <- theme(legend.position = "none")
     if (color_by_rhat) {
       p.point <- geom_segment(aes(x = m, xend = m, y = y, yend = y + 0.25, color = rhat_id),
                               size = 1.5)
-      p.all + p.poly + p.den + p.col + p.point + scale_color_manual(name = bquote(hat(R)), values = rhat_pal) + theme(legend.position = "top")
+      p.all + p.poly + p.den + p.col + p.point + rhat_colors + rhat_lgnd
     } else {
       p.point <- geom_segment(aes(x = m, xend = m, y = y, yend = y + 0.25),
                               colour = est_color,
@@ -341,7 +366,7 @@ no_lgnd <- theme(legend.position = "none")
                            colour = fill_color, size = 1.5)
     if (color_by_rhat) {
       p.point <- geom_point(aes(x = m, y = y, color = rhat_id), size = 3)
-      p.all + p.ci.2 + p.point + scale_color_manual(name = bquote(hat(R)), values = rhat_pal) + theme(legend.position = "top")
+      p.all + p.ci.2 + p.point + rhat_colors + rhat_lgnd
     } else {
       p.point <- geom_point(aes(x = m, y = y), size = 3, colour = est_color)
       p.all + p.ci.2 + p.point
@@ -350,27 +375,7 @@ no_lgnd <- theme(legend.position = "none")
 
 }
 
-
 # plot_param_vertical_rhat ------------------------------------------------------------
-.update_params_with_groups <- function(params, all_param_names) {
-  as_group <- grep("_as_shiny_stan_group", params)
-  if (length(as_group) == 0) {
-    return(params)
-  }
-
-  make_group <- function(group_name) {
-    temp <- paste0(group_name,"\\[")
-    all_param_names[grep(temp, all_param_names)]
-  }
-  single_params <- params[-as_group]
-  grouped_params <- params[as_group]
-  groups <- gsub("_as_shiny_stan_group", "", grouped_params)
-  groups <- sapply(groups, make_group)
-  updated_params <- c(single_params, unlist(groups))
-  updated_params
-}
-
-
 .plot_param_vertical_rhat <- function(samps, params = NULL, all_param_names,
                                       show_density, show_ci_line,
                                       rhat_values, color_by_rhat, rhat_palette,
