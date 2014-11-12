@@ -22,7 +22,7 @@ stan2shinystan <- function(stanfit, notes, make = FALSE) {
   slots$param_dims <- stanfit@par_dims
   slots$param_groups <- names(stanfit@par_dims)
   slots$samps_all <- rstan::extract(stanfit, permuted = FALSE, inc_warmup = TRUE)
-  slots$samps_post_warmup <- rstan::extract(stanfit, permuted = FALSE, inc_warmup = FALSE)
+#   slots$samps_post_warmup <- rstan::extract(stanfit, permuted = FALSE, inc_warmup = FALSE)
   slots$summary <- rstan::summary(stanfit)$summary
   slots$sampler_params <- rstan::get_sampler_params(stanfit)
   slots$nChains <- ncol(stanfit)
