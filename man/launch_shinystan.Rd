@@ -3,23 +3,30 @@
 \alias{launch_shinystan}
 \title{Launch SHINYstan app}
 \usage{
-launch_shinystan(object, ...)
+launch_shinystan(object)
 }
 \arguments{
 \item{object}{An object of class \code{shinystan} or \code{stanfit}.}
-
-\item{...}{Further arguments to be passed to \code{\link[SHINYstan]{stan2shinystan}}
-if \code{object} is a \code{stanfit} object.}
 }
 \value{
-If \code{object} is a \code{stanfit} object, in addition to launching
-the app an object of class \code{shinystan} is returned.
+If \code{object} is a \code{stanfit} object then, in addition to launching
+the SHINYstan app, this function creates an object of class \code{shinystan} in
+the Global Environment.
 }
 \description{
-This function will create an S4 object of class \code{shinystan} in the
-Global Environment and launch the SHINYstan app.
+Launch SHINYstan app
 }
-\seealso{
-\code{\link[rstan]{stan}}
+\examples{
+\dontrun{
+# If X is a shinystan object or stanfit object then to launch the app
+# just run
+launch_shinstan(X)
+
+# If X is an mcmc.list object or 3D array then to launch the app first
+# convert X to a shinystan object using the as.shinystan function
+X_shinystan <- as.shinystan(X)
+launch_shinystan(X_shinystan)
+
+}
 }
 

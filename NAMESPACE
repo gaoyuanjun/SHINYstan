@@ -3,4 +3,3 @@
 export(as.shinystan)
 export(launch_shinystan)
 export(launch_shinystan_demo)
-export(stan2shinystan)

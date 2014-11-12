@@ -1,13 +1,4 @@
-#' Convert an object of class \code{stanfit} (\pkg{rstan}) to class \code{shinystan}
-#'
-#' @param stanfit A \code{stanfit} object.
-#' @param notes A character string.
-#' @param make .
-#' @seealso \code{\link[rstan]{stan}}
-#' @export
-#'
-
-stan2shinystan <- function(stanfit, notes, make = FALSE) {
+stan2shinystan <- function(stanfit, notes) {
   stopifnot(requireNamespace("rstan", quietly = TRUE))
 
   if (!inherits(stanfit, "stanfit")) {
@@ -30,10 +21,5 @@ stan2shinystan <- function(stanfit, notes, make = FALSE) {
   slots$nWarmup <- stanfit@sim$warmup
   if (!missing(notes)) slots$user_model_info <- notes
 
-  if (!make) {
-    out <- do.call("new", slots)
-    return(out)
-  }
-
-  shiny_stan_object <<- do.call("new", slots)
+  do.call("new", slots)
 }

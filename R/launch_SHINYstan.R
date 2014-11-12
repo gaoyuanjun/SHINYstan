@@ -1,28 +1,34 @@
 #' Launch SHINYstan app
 #'
-#' This function will create an S4 object of class \code{shinystan} in the
-#' Global Environment and launch the SHINYstan app.
-#'
 #' @param object An object of class \code{shinystan} or \code{stanfit}.
-#' @param ... Further arguments to be passed to \code{\link[SHINYstan]{stan2shinystan}}
-#' if \code{object} is a \code{stanfit} object.
-#' @return If \code{object} is a \code{stanfit} object, in addition to launching
-#' the app an object of class \code{shinystan} is returned.
-#' @seealso \code{\link[rstan]{stan}}
+#' @return If \code{object} is a \code{stanfit} object then, in addition to launching
+#' the SHINYstan app, this function creates an object of class \code{shinystan} in
+#' the Global Environment.
 #' @export
+#' @examples
+#' \dontrun{
+#' # If X is a shinystan object or stanfit object then to launch the app
+#' # just run
+#' launch_shinstan(X)
+#'
+#' # If X is an mcmc.list object or 3D array then to launch the app first
+#' # convert X to a shinystan object using the as.shinystan function
+#' X_shinystan <- as.shinystan(X)
+#' launch_shinystan(X_shinystan)
+#'
+#' }
 #'
 
-launch_shinystan <- function(object, ...) {
+launch_shinystan <- function(object) {
 
   is_stan <- function(X) inherits(X, "stanfit")
-  is_shinystan <- function(X) inherits(X, "shinystan")
 
   launch <- function(object) {
-    if (is_shinystan(object)) {
+    if (is.shinystan(object)) {
       shiny_stan_object <<- object
     }
-    if (!is_shinystan(object)) {
-      do.call("stan2shinystan", list(stanfit = object, make = TRUE, ...))
+    if (!is.shinystan(object)) {
+      shiny_stan_object <<- stan2shinystan(object)
     }
     shiny::runApp(system.file("SHINYstan", package = "SHINYstan"))
   }
@@ -37,7 +43,7 @@ launch_shinystan <- function(object, ...) {
   if (missing(object)) {
     stop("Please specify a stanfit or SHINYstanfit object.")
   }
-  if (!is_stan(object) & !is_shinystan(object)) {
+  if (!is_stan(object) & !is.shinystan(object)) {
     stop(paste(name, "is not a stanfit or shinystan object."))
   }
   out_name <- ifelse(is_stan(object), paste0(name,"_shiny_stan"), name)

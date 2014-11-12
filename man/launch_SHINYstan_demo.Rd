@@ -11,12 +11,12 @@ See \strong{Note} below for the available demos. If \code{demo_name} is
 omitted it will default to the \code{eight_schools} Stan example model.}
 }
 \value{
-In addition to launching the app, an object of class \code{SHINYstanfit}
+In addition to launching the app, an object of class \code{shinystan}
 is returned.
 }
 \description{
-This function will create an S4 object of class \code{SHINYstanfit} in the Global Environment
-and then launch the SHINYstan app using a pre-loaded example model.
+This function will create an S4 object of class \code{shinystan} in the Global Environment
+and launch the SHINYstan app using a pre-loaded example model.
 }
 \note{
 List of available demo models:
@@ -32,8 +32,5 @@ List of available demo models:
 launch_shinystan_demo() # launches "eight_schools" demo by default
 launch_shinystan_demo("air")
 }
-}
-\seealso{
-\code{\link[rstan]{stan_demo}}
 }
 
