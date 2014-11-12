@@ -33,29 +33,43 @@ fluidRow(
 # _________________________________________________________________________
 mainPanel(width = 10,
 
+
+  tags$style(type="text/css", "h1{color: #559e83;}"),
+#   tags$style(type="text/css", "h5{color: #004444;}"),
   tags$style(type='text/css', ".well { padding-bottom: 5px; padding-top: 5px; }"),
   tags$style(type="text/css", "select.shiny-bound-input { font-size:10px; height:25px;}"),
 # tags$style(type="text/css", "input.shiny-bound-input { font-size:10px; width: 45px; height:15px;}"),
   tags$style(type="text/css", "#trace_rect_alpha, #contour_bins, #scatter_pt_alpha, #scatter_pt_size, #scatter_pt_shape, #scatter_ellipse_lty, #scatter_ellipse_lwd, #scatter_ellipse_alpha { font-size:12px; width: 45px; height:15px;}"),
   tags$style(type="text/css", "#param2_contour, #contour_type { font-size:10px; height:25px;}"),
-  tags$style(type="text/css", "#stats_digits {width: 40px;}"),
+  tags$style(type="text/css", "#stats_digits, #ac_lags { width: 40px;}"),
 
   tabsetPanel(type = "tabs", position = "above",
 
 
     #### TAB: Model ####
-    tabPanel("Model",
+    tabPanel(h4("  Main  "),
 
              #### subTabs ####
              tabsetPanel(type = "pills",
                          #### multiparameter plots ####
-                         tabPanel("PLOT",
+                         tabPanel(h5("Plots"),
+                              tabsetPanel(
+                                tabPanel("Model parameters",
                                   wellPanel(style = "background-color: #D3D3D3;",
                                             fluidRow(
                                               column(5, selectizeInput("params_to_plot", label = h5("Select or enter parameter names"), width = '100%', choices = .make_param_list_with_groups(object), multiple = TRUE)),
                                               column(3, offset = 1, sliderInput("param_plot_ci_level", h5("Credible Interval"), min = 50, max = 95, value = 50, step = 5)),
-                                              column(2, offset =1,  checkboxInput("param_plot_customize", h5("Customize appearance"), value = FALSE))
+                                              column(2, offset = 1,  checkboxInput("param_plot_customize", h5("Customize appearance"), value = FALSE))
                                             ),
+#                                             checkboxInput("param_slicing", "Enable slicing", value = FALSE),
+#                                             conditionalPanel(condition = "input.param_slicing == true",
+#                                                                wellPanel(
+#                                                                  fluidRow(
+#                                                                    column(4, selectizeInput(inputId = "param_to_slice", label = "", choices = .make_param_list_for_slicing(object), multiple = FALSE)),
+#                                                                    column(3, textInput("param_slice_txt", label = "", value = ""))
+#                                                                   )
+#                                                                )
+#                                             ),
                                             conditionalPanel(condition = "input.param_plot_customize == true",
                                                              wellPanel(
                                                                fluidRow(
@@ -77,37 +91,77 @@ mainPanel(width = 10,
                                   ),
                                   hr(),
                                   # plot
-                                  plotOutput("plot_param_vertical_out"),
-                                  hr(),
-                                  # export
-                                  downloadButton("download_param_plot", "Save ggplot2 object (.RData)")
+#                                   conditionalPanel(condition = "input.param_slicing == false",
+                                    plotOutput("plot_param_vertical_out"),
+                                    hr(),
+                                    # export
+                                    downloadButton("download_param_plot", "Save ggplot2 object (.RData)")
+#                                   ),
+#                                   conditionalPanel(condition = "input.param_slicing == true",
+#                                                    plotOutput("plot_param_vertical_slice_out"),
+#                                                    hr(),
+#                                                    # export
+#                                                    downloadButton("download_param_plot_slice", "Save ggplot2 object (.RData)")
+#                                   )
                          ),
+                        tabPanel("Markov chain autocorrelation",
+                          wellPanel(style = "background-color: #D3D3D3;",
+                            fluidRow(
+                              column(5, selectizeInput("ac_params", label = h5("Select or enter parameter names"), width = '100%', choices = .make_param_list_with_groups(object), multiple = TRUE)),
+                              column(3, offset = 1, numericInput("ac_lags", label = h5("Number of lags"), value = 25, min = 0, step = 1)),
+                              column(2, offset = 1, checkboxInput("ac_flip", label = h5("Flip facets"), value = FALSE))
+                            )
+                          ),
+                          plotOutput("autocorr_plot_out")
+                        )
+                    )
+                  ),
 
-                         #### summary stats ####
-                         tabPanel("STATS",
-                                  fluidRow(
-                                    column(2, h5("Decimal places")),
-                                    column(1, numericInput("stats_digits", label = "", value = 2, min = 0, max = 6, step = 1)),
-                                    column(7, offset = 2, helpText("Note: parameters with Rhat values above 1.1 are colored red."))
-                                  ),
-                                  hr(),
-                                  # data table
-                                  dataTableOutput("all_summary_out"),
-                                  # export
-                                  downloadButton("download_summary_stats", "Save summary stats (.RData)")
-                         )
-
+                  #### summary stats ####
+                  tabPanel(h5("Stats"),
+                    tabsetPanel(
+                      tabPanel("Posterior summary statistics",
+                    sidebarPanel(style = "background-color: #D3D3D3;",
+                      h4("Table options"),
+                      hr(),
+                      h5("Rounding"),
+                      fluidRow(
+                        column(2, numericInput("stats_digits", label = "", value = 2, min = 0, max = 7, step = 1)),
+                        column(9, offset = 1, h6("decimal places"))
+                      ),
+                      checkboxGroupInput("stats_columns", label = h5("Columns"),
+                                         choices = c("Rhat", "Effective sample size (n_eff)" = "n_eff", "Posterior mean" = "mean", "Posterior standard deviation" = "sd", "MCMC standard error" = "se_mean", "Quantile: 2.5%" = "2.5%", "Quantile: 25%" = "25%", "Quantile: 50%" = "50%", "Quantile: 75%" = "75%", "Quantile: 97.5%" = "97.5%"),
+                                         selected = c("Rhat", "n_eff", "mean", "sd", "se_mean", "2.5%", "50%", "97.5%"))
+                    ),
+                    mainPanel(
+                      helpText("Note: parameters with Rhat values above 1.1 are colored red."),
+                      hr(),
+                      # data table
+                      dataTableOutput("all_summary_out"),
+                      hr(),
+                      # export
+                      downloadButton("download_summary_stats", "Save summary stats (.RData)")
+                    )
+                  ),
+                  tabPanel("HMC Sampler Parameters (Stan models only)",
+                           h3("Average value of sampler parameters"),
+                           checkboxInput("sampler_warmup", label = h6("Include warmup period?"), value = TRUE),
+                           hr(),
+                           tableOutput("sampler_summary")
+                  )
+                )
+              )
              ) # END subTabs: model stats & plots
     ), # END TAB: model
 
     #### TAB: Individual Parameters ####
-    tabPanel("Individual Parameters",
+    tabPanel(h4("Explore Parameters"),
              wellPanel(style = "background-color: #F0F8FF; padding-top: 10px;",
                        fluidRow(
                          column(2, h4("Select parameter")),
-                         column(4, selectizeInput(inputId = "param", label = "", choices = .make_param_list(object), multiple = FALSE)),
+                         column(3, selectizeInput(inputId = "param", label = "", choices = .make_param_list(object), multiple = FALSE)),
                          # summary stats
-                         column(6, tableOutput("parameter_summary_out"))
+                         column(6, offset = 1, tableOutput("parameter_summary_out"))
                        )),
 
              # display parameter name
@@ -194,7 +248,7 @@ mainPanel(width = 10,
                                   # select 2nd parameter
                                   fluidRow(
                                     column(3, h5("Second parameter")),
-                                    column(6, selectizeInput(inputId = "param2_contour", label = "", choices = .make_param_list(object), multiple = FALSE))
+                                    column(6, selectizeInput(inputId = "param2_contour", label = "", choices = rev(.make_param_list(object)), multiple = FALSE))
                                   ),
                                   # plot
                                   plotOutput("contour_plot_out"),
@@ -248,38 +302,41 @@ mainPanel(width = 10,
              ) # END subTabs: parameter plots
     ), # END TAB: Individual Parameters
 
-    #### TAB: Sampler ####
-    tabPanel("Sampler Parameters",
-             h3("Average value of sampler parameters"),
-             checkboxInput("sampler_warmup", label = h6("Include warmup period?"), value = TRUE),
-             hr(),
-             tableOutput("sampler_summary")
-    ), # END TAB: sampler
+#     #### TAB: Sampler ####
+#     tabPanel("Sampler Parameters",
+#              h3("Average value of sampler parameters"),
+#              checkboxInput("sampler_warmup", label = h6("Include warmup period?"), value = TRUE),
+#              hr(),
+#              tableOutput("sampler_summary")
+#     ), # END TAB: sampler
 
 
 
     #### TAB: Warnings ####
-    tabPanel("Warnings",
-             helpText("This tab displays things that seem to have gone wrong during sampling.", "REPLACE THIS TEXT WITH SOMETHING BETTER"),
-             br(),br(),
-             h4("The following parameters have Rhat values above 1.1:"),
-             br(),
-             textOutput("rhat_warnings")
-    ), # END TAB: warnings
-
+#     tabPanel(h4("Quick Warnings"),
+#              helpText("This tab displays things that seem to have gone wrong during sampling.", "REPLACE THIS TEXT WITH SOMETHING BETTER"),
+#              br(),br(),
+#              h4("The following parameters have Rhat values above 1.1:"),
+#              br(),
+#              textOutput("rhat_warnings")
+#     ), # END TAB: warnings
+#
 
 
     #### TAB: Notes ####
-    tabPanel("Notes",
+    tabPanel(h4("User Notes"),
              br(),
              helpText("Use this space to store notes about your model. ",
                       "The text will be saved in the user_model_info slot of",
-                      "the shiny_stan_object and displayed here each time SHINYstan",
-                      "is launched with this shiny_stan_object."),
+                      "your shinystan object and displayed here each time SHINYstan",
+                      "is launched for this object."),
              br(),
              tags$textarea(id="user_model_info", style = "width: 500px;", rows=10, cols=60, shiny_stan_object@user_model_info),
              br(),
-             actionButton("save_user_model_info", label = "Save Changes"),
+             fluidRow(
+              column(3, actionButton("save_user_model_info", label = "Save Changes")),
+              column(8, offset = 1, textOutput("user_text_saved"))
+              ),
              hr()
              #       h6("Why use this feature?"),
              #       helpText("If you want to allow other users to explore your model with",
@@ -290,7 +347,7 @@ mainPanel(width = 10,
 
 
     #### TAB: Credits ####
-    tabPanel("Credits",
+    tabPanel(h4(style = "color: #D3D3D3;", "Credits"),
              h3("SHINYstan"),
              htmlOutput("SHINYstan_credits"),
              br(),

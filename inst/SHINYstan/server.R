@@ -71,23 +71,23 @@ shinyServer(function(input, output) {
 
 #### DATATABLE: summary stats (all parameters) ####
   source("server_files/summary_stats_reactive.R", local = TRUE)
+#   // color in red the names of parameters with rhats >= 1.1
+#     rowCallback = I(
+#       'function(row, data) {
+#         if (parseFloat(data["Rhat"]) >= 1.1)
+#          $("td:eq(0)", row).css("color", "red");
+#         if (parseFloat(data["Rhat"]) >= 1.1)
+#          $("td:eq(1)", row).css("color", "red");
+#       }'
+#     )
   output$all_summary_out <- renderDataTable({
     summary_stats()
   }, options = list(
     pageLength = 10,
     lengthMenu = list(c(5, 10, 20, 50, -1), c('5', '10', '20', '50', 'All')),
-    columnDefs = list(list(targets = c(2:11) - 1, searchable = FALSE)),
     orderClasses = TRUE,
-    scrollCollapse = TRUE,
-    rowCallback = I(
-      'function(row, data) {
-        // color in red the names of parameters with rhats >= 1.1
-        if (parseFloat(data[1]) >= 1.1)
-         $("td:eq(0)", row).css("color", "red");
-        if (parseFloat(data[1]) >= 1.1)
-         $("td:eq(1)", row).css("color", "red");
-      }'
-    )))
+    scrollCollapse = TRUE
+  ))
   output$download_summary_stats <- downloadHandler(
     filename = 'shiny_stan_summary_stats.RData',
     content = function(file) {
@@ -97,9 +97,9 @@ shinyServer(function(input, output) {
   )
 
 
-
 #### PLOT: median, CI, and density (multiple parameters) ####
   source("server_files/multiparameter_plot_gg_reactive.R", local = TRUE)
+  source("server_files/multiparameter_plot_gg_slice_reactive.R", local = TRUE)
   output$plot_param_vertical_out <- renderPlot({
     plot_param_vertical()
   }, width = 650, height = calc_height_param_plot)
@@ -111,6 +111,17 @@ shinyServer(function(input, output) {
       save(shiny_stan_param_plot, file = file)
   }
 )
+  output$plot_param_vertical_slice_out <- renderPlot({
+    plot_param_vertical_slice()
+  }, width = 650, height = calc_height_param_plot)
+
+  output$download_param_plot_slice <- downloadHandler(
+    filename = 'shiny_stan_param_plot.RData',
+    content = function(file) {
+      shiny_stan_param_plot <- plot_param_vertical_slice()
+      save(shiny_stan_param_plot, file = file)
+    }
+  )
 
 #### TABLE: summary stats (sampler) ####
   output$sampler_summary <- renderTable({
@@ -148,6 +159,29 @@ shinyServer(function(input, output) {
         shiny_stan_object@user_model_info <<- input$user_model_info
     })
   })
+  output$user_text_saved <- renderText({
+    input$save_user_model_info
+    if (input$save_user_model_info != 0)
+      print(paste("Saved: ", Sys.time()))
+  })
+
+
+
+
+
+
+#### PLOT: autocorrelation (multiple parameters) ####
+source("server_files/autocorr_plot_reactive.R", local = TRUE)
+output$autocorr_plot_out <- renderPlot({
+  autocorr_plot()
+})
+output$download_autocorr <- downloadHandler(
+  filename = paste0('shiny_stan_autocorr.RData'),
+  content = function(file) {
+    shiny_stan_autocorr <- autocorr_plot()
+    save(shiny_stan_autocorr, file = file)
+  }
+)
 
 
 

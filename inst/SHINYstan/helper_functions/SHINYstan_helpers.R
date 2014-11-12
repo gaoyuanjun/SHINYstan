@@ -1,3 +1,169 @@
+# plot_param_vertical_gg_slice --------------------------------------------------
+.plot_param_vertical_gg_slice <- function(samps,
+                                          params,
+                                          param_dims,
+                                          slice_txt,
+                                          show_density,
+                                          show_ci_line,
+                                          CI.level = 0.5,
+                                          show.level = 0.95,
+                                          point_est,
+                                          rhat_values,
+                                          color_by_rhat,
+                                          rhat_palette,
+                                          fill_color,
+                                          outline_color,
+                                          est_color) {
+
+
+  if (slice_txt == "") {
+    params <- paste0(params,"[",1:min(10, param_dims[[params]]),"]")
+  } else {
+    params <- .update_params_with_slicing(params, slice_txt)
+  }
+  .e <- environment()
+  dim.samps <- dim(samps) #nIter, nChain, nParam
+
+  Blues <- c("#C6DBEF", "#4292C6", "#08306B")
+  Grays <- c("#D9D9D9", "#737373", "#000000")
+  Greens <- c("#C7E9C0", "#41AB5D", "#00441B")
+  Oranges <- c("#FDD0A2", "#F16913", "#7F2704")
+  Purples <- c("#DADAEB", "#807DBA", "#3F007D")
+  Reds <- c("#FCBBA1", "#EF3B2C", "#67000D")
+  rhat_pal <- get(rhat_palette)
+  rhat_id <- ifelse(rhat_values < 1.05, "A",
+                    ifelse(rhat_values < 1.1, "B", "C"))
+  rhat_id <- factor(rhat_id[params], levels = c("A","B", "C"), labels = c("<1.05", "<1.1", ">1.1"))
+  rhat_colors <- scale_color_manual(name = bquote(hat(R)),
+                                    values = rhat_pal,
+                                    drop = FALSE)
+  rhat_lgnd <- theme(legend.position = "top",
+                     legend.title = element_text(size = 13, face = "bold"),
+                     legend.text = element_text(size = 12))
+
+  nParams <- length(params)
+  nIter <- dim.samps[1] * dim.samps[2]
+  samps.use <- array(samps[,,params], c(nIter, nParams))
+  colnames(samps.use) <- params
+
+  probs.use <- c(0.5 - show.level / 2,
+                 0.5 - CI.level / 2,
+                 0.5,
+                 0.5 + CI.level / 2,
+                 0.5 + show.level / 2)
+  samps.quantile <- t(apply(samps.use, 2, quantile, probs = probs.use))
+  y <- as.numeric(seq(nParams, 1, by = -1))
+
+  xlim.use <- c(min(samps.quantile[,1]), max(samps.quantile[,5]))
+  xrange <- diff(xlim.use)
+  xlim.use[1] <- xlim.use[1] - 0.05 * xrange
+  xlim.use[2] <- xlim.use[2] + 0.05 * xrange
+
+  xy.df <- data.frame(params, y, samps.quantile)
+  colnames(xy.df) <- c("params", "y", "ll", "l", "m", "h", "hh")
+  if (point_est == "Mean") {
+    xy.df$m <- apply(samps.use, 2, mean)
+  }
+  p.base <- ggplot(xy.df, environment = .e)
+  p.name <- scale_y_continuous(breaks = y, labels = params)
+  p.theme <- theme(axis.title=element_blank(),
+                   panel.background = element_blank(),
+                   panel.border = element_blank(),
+                   axis.ticks.y = element_blank(),
+                   axis.text=element_text(size=12),
+                   axis.line=element_line(size = 1.75),
+                   axis.line.y=element_blank(),
+                   legend.position = "none",
+                   panel.grid.major = element_line(size = 0.4))
+  p.all <- p.base + p.name + theme_bw() + p.theme + xlim(xlim.use)
+
+  if (show_ci_line | show_density) {
+    p.ci <- geom_segment(aes(x = ll, xend = hh, y = y, yend = y),
+                         colour = outline_color)
+    p.all <- p.all + p.ci
+  }
+  if (show_density) {
+    nPoint.den <- 512
+    #plot density
+    y.den <- matrix(0, nrow = nPoint.den, ncol = nParams)
+    x.den <- matrix(0, nrow = nPoint.den, ncol = nParams)
+    for(i in 1:nParams){
+      d.temp <- density(samps.use[,i],
+                        from = samps.quantile[i,1],
+                        to = samps.quantile[i,5],
+                        n = nPoint.den)
+      x.den[,i] <- d.temp$x
+      y.max <- max(d.temp$y)
+      y.den[,i] <- d.temp$y / y.max * 0.8 + y[i]
+    }
+    df.den <- data.frame(x = as.vector(x.den), y = as.vector(y.den),
+                         name = rep(params, each = nPoint.den))
+    p.den <- geom_line(data = df.den, aes(x = x, y = y, group = name),
+                       color = outline_color)
+
+    #shaded the confidence interval
+    y.poly <- matrix(0, nrow = nPoint.den + 2, ncol = nParams)
+    x.poly <- matrix(0, nrow = nPoint.den + 2, ncol = nParams)
+    for(i in 1:nParams){
+      d.temp <- density(samps.use[,i],
+                        from = samps.quantile[i,2],
+                        to = samps.quantile[i,4],
+                        n = nPoint.den)
+      x.poly[,i] <- c(d.temp$x[1], as.vector(d.temp$x), d.temp$x[nPoint.den])
+      y.max <- max(d.temp$y)
+      y.poly[,i] <- as.vector(c(0, as.vector(d.temp$y) / y.max * 0.8, 0) + y[i])
+    }
+    df.poly <- data.frame(x = as.vector(x.poly), y = as.vector(y.poly),
+                          name = rep(params, each = nPoint.den + 2))
+    p.poly <- geom_polygon(data = df.poly, aes(x = x, y = y, group = name, fill = y))
+    p.col <- scale_fill_gradient(low = fill_color, high = fill_color, guide = "none")
+
+    #point estimator
+    if (color_by_rhat) {
+      p.point <- geom_segment(aes(x = m, xend = m, y = y, yend = y + 0.25, color = rhat_id),
+                              size = 1.5)
+      p.all + p.poly + p.den + p.col + p.point + rhat_colors + rhat_lgnd
+    } else {
+      p.point <- geom_segment(aes(x = m, xend = m, y = y, yend = y + 0.25),
+                              colour = est_color,
+                              size = 1.5)
+      p.all + p.poly + p.den + p.col + p.point
+    }
+
+  } else {
+    p.ci.2 <- geom_segment(aes(x = l, xend = h, y = y, yend = y),
+                           colour = fill_color, size = 1.5)
+    if (color_by_rhat) {
+      p.point <- geom_point(aes(x = m, y = y, color = rhat_id), size = 3)
+      p.all + p.ci.2 + p.point + rhat_colors + rhat_lgnd
+    } else {
+      p.point <- geom_point(aes(x = m, y = y), size = 3, colour = est_color)
+      p.all + p.ci.2 + p.point
+    }
+  }
+
+}
+.make_param_list_for_slicing <- function(object) {
+  pd <- object@param_dims
+  ll <- length(pd)
+  choices <- rep(NA, ll)
+  for(i in 1:ll) {
+    if (length(pd[[i]]) == 1) {
+      choices[i] <- names(pd[i])
+    }
+  }
+  choices <- choices[!is.na(choices)]
+  choices
+}
+# update_params_with_slicing  ---------------------------------------------
+.update_params_with_slicing <- function(param, slice_txt) {
+  slice <- parse(text = slice_txt)
+  updated_params <- paste0(param,"[", eval(slice),"]")
+  updated_params
+}
+
+
+
 # misc. functions --------------------------------------------------------
 .in_range <- function(x, a, b) {
   x >= a & x <= b
@@ -187,7 +353,7 @@ no_lgnd <- theme(legend.position = "none")
       g <- g + with(scatter_ops, stat_ellipse(level = as.numeric(ci_lev), color = ci_color, linetype = ci_lty, size = ci_lwd, alpha = ci_alpha))
     }
   }
-  g + theme_classic() %+replace% (no_lgnd + fat_axis)
+  g + theme_classic() %+replace% (no_lgnd + fat_axis) + ggtitle(paste(param, "vs.", param2, "\n"))
 }
 
 
@@ -203,17 +369,23 @@ no_lgnd <- theme(legend.position = "none")
 
 
 # all_summary -------------------------------------------------------------
-.all_summary <- function(fit_summary, digits = 2) {
-  order <- c("Rhat", "n_eff", "mean", "se_mean", "sd",
-             "2.5%", "25%", "50%", "75%", "97.5%")
-  out <- round(fit_summary[,order], digits)
-  out[,"n_eff"] <- round(out[,"n_eff"])
-  cbind(Parameter = rownames(out), out)
+.all_summary <- function(fit_summary, digits = 2, cols) {
+
+
+#   order <- c("Rhat", "n_eff", "mean", "sd", "se_mean",
+#             "2.5%", "25%", "50%", "75%", "97.5%")
+  df <- as.data.frame(fit_summary[, cols])
+  df <- round(df, digits)
+  if ("n_eff" %in% cols) {
+    df[,"n_eff"] <- round(df[,"n_eff"])
+  }
+  out <- cbind(Parameter = rownames(df), df)
+  out
 }
 
 
-
-# update parameter selection for multi-parameter plot
+# update_params_with_groups -----------------------------------------------
+  # update parameter selection for multi-parameter plot
 .update_params_with_groups <- function(params, all_param_names) {
   as_group <- grep("_as_shiny_stan_group", params)
   if (length(as_group) == 0) {
@@ -232,7 +404,8 @@ no_lgnd <- theme(legend.position = "none")
   updated_params
 }
 
-# plot_param_vertical_gg
+
+# plot_param_vertical_gg --------------------------------------------------
 .plot_param_vertical_gg <- function(samps,
                                     params = NULL,
                                     all_param_names,
@@ -375,211 +548,6 @@ no_lgnd <- theme(legend.position = "none")
 
 }
 
-# plot_param_vertical_rhat ------------------------------------------------------------
-.plot_param_vertical_rhat <- function(samps, params = NULL, all_param_names,
-                                      show_density, show_ci_line,
-                                      rhat_values, color_by_rhat, rhat_palette,
-                                      CI.level = 0.5, show.level = 0.95,
-                                      point_est, est_color,
-                                      fill_color, outline_color, segment_color
-                                      ) {
-
-  params <- .update_params_with_groups(params, all_param_names)
-
-  Blues <- c("#C6DBEF", "#4292C6", "#08306B")
-  Grays <- c("#D9D9D9", "#737373", "#000000")
-  Greens <- c("#C7E9C0", "#41AB5D", "#00441B")
-  Oranges <- c("#FDD0A2", "#F16913", "#7F2704")
-  Purples <- c("#DADAEB", "#807DBA", "#3F007D")
-  Reds <- c("#FCBBA1", "#EF3B2C", "#67000D")
-  rhat_pal <- get(rhat_palette)
-  rhat_colors <- ifelse(rhat_values < 1.05, rhat_pal[1],
-                        ifelse(rhat_values < 1.1, rhat_pal[2], rhat_pal[3]))
-  names(rhat_colors) <- names(rhat_values)
-
-
-  dim.samps <- dim(samps) #nIter, nChain, nParam
-  if(length(params) == 0) {
-    params <- dimnames(samps)$parameters[1:min(10, dim.samps[3])]
-  }
-
-  nParams <- length(params)
-  nIter <- dim.samps[1] * dim.samps[2]
-  samps.use <- array(samps[,,params], c(nIter, nParams))
-  colnames(samps.use) <- params
-
-  samps.mean <- apply(samps.use, 2, mean)
-  samps.median <- apply(samps.use, 2, median)
-  probs.use <- c(0.5 - show.level / 2,
-                 0.5 - CI.level / 2,
-                 0.5,
-                 0.5 + CI.level / 2,
-                 0.5 + show.level / 2)
-  samps.quantile <- t(apply(samps.use, 2, quantile, probs = probs.use))
-
-  y <- nParams:1
-  xlim <- c(min(samps.quantile[,1]), max(samps.quantile[,5]))
-  xrange <- diff(xlim)
-  xlim[1] <- xlim[1] - 0.05 * xrange
-  xlim[2] <- xlim[2] + 0.05 * xrange
-  ylim <- c(0.5, nParams + 1)
-  par(mar = c(1.5,8,3,1), oma = c(0, 0, 1, 0))
-
-  plot(samps.median, y, bty = "n", type = "n", axes = FALSE,
-       xlim = xlim, pch = 20, ylim = ylim,
-       xlab = "", ylab = "")
-
-  abline(h = y, lty = 2, col = "lightgray")
-  grid(nx = NULL, ny = 0, lty = 2)
-
-  mtext(text = params, side = 2, las = 1, at = y, font = 2)
-  axis(side = 3, lwd = 4)
-
-  if(show_density){
-    for(i in 1:nParams){
-      d.temp <- density(samps.use[,i],
-                        from = samps.quantile[i,1],
-                        to = samps.quantile[i,5])
-      y.max <- max(d.temp$y)
-      x.plot <- d.temp$x
-      y.plot <- d.temp$y / y.max * 0.8 + y[i]
-
-
-      d.poly <- density(samps.use[,i],
-                        from = samps.quantile[i,2],
-                        to = samps.quantile[i,4])
-      x.poly <- d.poly$x
-      y.poly.max <- max(d.poly$y)
-      y.poly <- d.poly$y / y.poly.max * 0.8 + y[i]
-
-      polygon(x = c(min(x.poly), x.poly, max(x.poly)),
-              y = c(y[i], y.poly, y[i]),
-              density=100, col = fill_color)
-
-      lines(x.plot, y.plot, col = outline_color)
-      if (point_est == "Median") {
-        segments(samps.median[i], y[i], samps.median[i], y[i] + 0.25,  lwd = 2, col = ifelse(color_by_rhat, rhat_colors[params[i]], est_color))
-      }
-      if (point_est == "Mean") {
-        segments(samps.mean[i], y[i], samps.mean[i], y[i] + 0.25,  lwd = 2, col = ifelse(color_by_rhat, rhat_colors[params[i]], est_color))
-      }
-      segments(samps.quantile[,1], y, samps.quantile[,5], y, col = outline_color)
-    }
-  }
-  else{
-    if (show_ci_line) {
-      segments(samps.quantile[,1], y, samps.quantile[,5], y, col = outline_color)
-    }
-    segments(samps.quantile[,2], y, samps.quantile[,4], y, lwd = 4, col = fill_color)
-    if (point_est == "Median") {
-      for(i in 1:nParams)
-        points(samps.median[i], y[i], pch = 20, cex = 1.75,
-               col = ifelse(color_by_rhat, rhat_colors[params[i]], est_color))
-    }
-    if (point_est == "Mean") {
-      for(i in 1:nParams)
-        points(samps.mean, y, pch = 20, cex = 1.75,
-               col = ifelse(color_by_rhat, rhat_colors[params[i]], est_color))
-    }
-  }
-
-  if (color_by_rhat) {
-    par(fig = c(0, 1, 0, 1), oma = c(0, 0, 0, 0), mar = c(0, 0, 0, 0), new = TRUE)
-    plot(0, 0, type = "n", bty = "n", xaxt = "n", yaxt = "n")
-    legend("topright", legend = c("Rhat:", "< 1.05", "< 1.10", "> 1.10"),
-             pch = 20, pt.cex = 1.75, box.col = "white", col = c(NA, rhat_pal),
-           horiz = T, xpd = T, inset = c(0,0))
-  }
-}
-
-# plot_param_vertical ------------------------------------------------------------
-.plot_param_vertical <- function(samps, params = NULL, show_density, show_ci_line,
-                                 CI.level = 0.5, show.level = 0.95, point_est,
-                                 fill_color, outline_color, segment_color, est_color){
-
-  dim.samps <- dim(samps) #nIter, nChain, nParam
-  if(length(params) == 0) {
-    params = dimnames(samps)$parameters[1:min(10, dim.samps[3])]
-  }
-  nParams <- length(params)
-  nIter <- dim.samps[1] * dim.samps[2]
-  samps.use <- array(samps[,,params], c(nIter, nParams))
-  colnames(samps.use) <- params
-
-  samps.mean <- apply(samps.use, 2, mean)
-  samps.median <- apply(samps.use, 2, median)
-  probs.use <- c(0.5 - show.level / 2,
-                 0.5 - CI.level / 2,
-                 0.5,
-                 0.5 + CI.level / 2,
-                 0.5 + show.level / 2)
-  samps.quantile <- t(apply(samps.use, 2, quantile, probs = probs.use))
-
-  y <- seq(nParams, 1, by = -1)
-  xlim <- c(min(samps.quantile[,1]), max(samps.quantile[,5]))
-  xrange <- diff(xlim)
-  xlim[1] <- xlim[1] - 0.05 * xrange
-  xlim[2] <- xlim[2] + 0.05 * xrange
-  par(mar = c(1.5,5,3,1))
-
-  plot(samps.median, y, bty = "n", type = "n", axes = FALSE,
-       xlim = xlim, pch = 20, ylim = c(0.5, nParams + 1),
-       xlab = "", ylab = "")
-
-  abline(h = y, lty = 2, col = "lightgray")
-  grid(nx = NULL, ny = 0, lty = 2)
-
-  #   axis(side = 2, at = y, labels = params, las = 1)
-  mtext(text = params, side = 2, las = 1, at = y, font = 2)
-  axis(side = 3, lwd = 3)
-
-  if(show_density){
-    for(i in 1:nParams){
-      d.temp <- density(samps.use[,i],
-                        from = samps.quantile[i,1],
-                        to = samps.quantile[i,5])
-      y.max <- max(d.temp$y)
-      x.plot <- d.temp$x
-      y.plot <- d.temp$y / y.max * 0.8 + y[i]
-
-
-      d.poly <- density(samps.use[,i],
-                        from = samps.quantile[i,2],
-                        to = samps.quantile[i,4])
-      x.poly <- d.poly$x
-      y.poly.max <- max(d.poly$y)
-      y.poly <- d.poly$y / y.poly.max * 0.8 + y[i]
-
-      polygon(x = c(min(x.poly), x.poly, max(x.poly)),
-              y = c(y[i], y.poly, y[i]),
-              density=100, col = fill_color)
-
-      lines(x.plot, y.plot, col = outline_color)
-
-      if (point_est == "Median") {
-        segments(samps.median[i], y[i], samps.median[i], y[i] + 0.25,  lwd = 2, col = est_color)
-      }
-      if (point_est == "Mean") {
-        segments(samps.mean[i], y[i], samps.mean[i], y[i] + 0.25,  lwd = 2, col = est_color)
-      }
-      segments(samps.quantile[,1], y, samps.quantile[,5], y, col = outline_color)
-    }
-  }
-  else{
-    if (show_ci_line) {
-      segments(samps.quantile[,1], y, samps.quantile[,5], y, col = outline_color)
-    }
-    segments(samps.quantile[,2], y, samps.quantile[,4], y, lwd = 4, col = fill_color)
-    if (point_est == "Median") {
-      points(samps.median, y, pch = 20, cex = 1.75, col = est_color)
-    }
-    if (point_est == "Mean") {
-      points(samps.mean, y, pch = 20, cex = 1.75, col = est_color)
-    }
-  }
-}
-
-
 
 # rhat_plot ---------------------------------------------------------------
 .calc_height_fixed <- function(pars) {
@@ -645,5 +613,62 @@ no_lgnd <- theme(legend.position = "none")
   return(paste0(warn_params_1, collapse = ", "))
 }
 
+
+
+# autocorr_plot -----------------------------------------------------------
+.autocorr_plot <- function(samps, params = NULL, all_param_names,
+                           lags = 25, flip = FALSE) {
+
+  if (!is.numeric(lags)) {
+    return(last_plot())
+  }
+
+  params <- .update_params_with_groups(params, all_param_names)
+  if(length(params) == 0) {
+    dim.samps <- dim(samps)
+    params <- dimnames(samps)$parameters[1]
+  }
+  params <- unique(params)
+  dat <- samps[,,params]
+  dat <- melt(dat)
+
+  nParams <- length(params)
+  if (nParams == 1) {
+    ac_dat <- ddply(dat, "chains", here(summarise),
+                    ac = acf(value, lag.max = lags, plot = FALSE)$acf[,,1],
+                    lag = 0:lags)
+  }
+  if (nParams > 1) {
+    ac_dat <- ddply(dat, c("parameters", "chains"), here(summarise),
+                    ac = acf(value, lag.max = lags, plot = FALSE)$acf[,,1],
+                    lag = 0:lags)
+  }
+  ac_labs <- labs(x = "Lag", y = "Autocorrelation")
+  strip_txt <- theme(strip.text = element_text(size = 12, face = "bold", color = "white"),
+                     strip.background = element_rect(fill = "black"))
+  ac_theme <- theme_classic() %+replace% (fat_axis + no_lgnd + strip_txt)
+  y_scale <- scale_y_continuous(breaks = seq(0, 1, 0.25), labels = c("0","","0.5","",""))
+
+  gg_ac <- ggplot(ac_dat, aes(x = lag, y = ac, fill = factor(chains)))
+  gg_ac <- (gg_ac +
+              geom_bar(position = "identity", stat = "identity") +
+              y_scale +
+              ac_labs +
+              ac_theme
+  )
+
+  if (nParams == 1) {
+    gg_ac <- gg_ac + facet_wrap(~chains) + ggtitle(paste(params, "\n"))
+  }
+  if (nParams > 1) {
+    if (flip == FALSE) {
+      gg_ac <- gg_ac + facet_grid(parameters ~ chains)
+    }
+    if (flip == TRUE) {
+      gg_ac <- gg_ac + facet_grid(chains ~ parameters)
+    }
+  }
+  gg_ac
+}
 
 
