@@ -134,8 +134,6 @@ mainPanel(width = 10,
                                          selected = c("Rhat", "n_eff", "mean", "sd", "se_mean", "2.5%", "50%", "97.5%"))
                     ),
                     mainPanel(
-                      helpText("Note: parameters with Rhat values above 1.1 are colored red."),
-                      hr(),
                       # data table
                       dataTableOutput("all_summary_out"),
                       hr(),
