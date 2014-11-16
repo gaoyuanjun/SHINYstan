@@ -25,7 +25,7 @@ as.shinystan <- function(X, ...) {
   get_type <- function(x) {
     if (inherits(x, "shinystan")) return("shinystan")
     if (inherits(x, "stanfit")) return("stanfit")
-    if (inherits(x, "mcmclist")) return("mcmclist")
+    if (inherits(x, "mcmc.list")) return("mcmclist")
     return("other")
   }
 
