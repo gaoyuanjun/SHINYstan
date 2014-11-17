@@ -16,12 +16,6 @@ stan2shinystan <- function(stanfit, notes) {
   slots$param_names <- param_names
   slots$param_dims <- param_dims
   slots$param_groups <- names(param_dims)
-<<<<<<< HEAD
-=======
-  slots$param_names <- stanfit@sim$fnames_oi
-  slots$param_dims <- stanfit@par_dims
-  slots$param_groups <- names(stanfit@par_dims)
->>>>>>> FETCH_HEAD
   slots$samps_all <- samps_all
   slots$summary <- rstan::summary(stanfit)$summary
   slots$sampler_params <- rstan::get_sampler_params(stanfit)
