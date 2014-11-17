@@ -1,6 +1,16 @@
 # density_plot
 density_plot <- reactive({
+
+  if (input$param == "") {
+    return()
+  }
+
   customize <- input$dens_customize
+  if (customize & is.null(input$dens_x_breaks)) {
+    # delay until the customization inputs are ready
+    return()
+  }
+
   do.call(".param_dens", args = list(
     param       = input$param,
     dat         = par_samps_post_warmup(),
@@ -13,3 +23,4 @@ density_plot <- reactive({
     x_breaks    = ifelse(customize, input$dens_x_breaks, "Some")
   ))
 })
+

@@ -1,7 +1,18 @@
 # trace_plot
 trace_plot <- reactive({
-  zoom <- input$tracezoom
+
+  if (input$param == "") {
+    return()
+  }
+
   customize <- input$trace_customize
+  zoom <- input$tracezoom
+
+  if (customize & is.null(input$trace_rect)) {
+    # delay until the customization inputs are ready
+    return()
+  }
+
   do.call(".param_trace", args = list(
     param       = input$param,
     dat         = par_samps_all(),

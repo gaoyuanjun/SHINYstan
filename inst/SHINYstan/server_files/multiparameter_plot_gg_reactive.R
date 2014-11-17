@@ -3,15 +3,21 @@ calc_height_param_plot <- reactive({
   params <- input$params_to_plot
   params <- .update_params_with_groups(params, param_names)
   LL <- length(params)
-  N <- ifelse(LL < 8, 8, LL)
+  N <- ifelse(LL < 10, 15, LL)
   if (input$param_plot_color_by_rhat == TRUE) {
     N <- N + 2
   }
-  round(400*N/10)
+  out <- round(400*N/10)
+  out
 })
 
 plot_param_vertical <- reactive({
-  customize <- input$param_plot_customize
+
+  if (is.null(input$param_plot_ci_level)) {
+    return()
+  }
+
+  customize <- !is.null(input$param_plot_show_density)
   do.call(".plot_param_vertical_gg", args = list(
     samps           = samps_post_warmup,
     params          = input$params_to_plot,
