@@ -50,13 +50,13 @@ shinyServer(function(input, output, session) {
   })
 
   #### TABLE: summary stats (single parameter) ####
-  source("server_files/output/parameter_summary_reactive.R", local = TRUE)
+  source("server_files/outputs/parameter_summary_reactive.R", local = TRUE)
   output$parameter_summary_out <- renderTable({
     parameter_summary()
   }, include.rownames = FALSE, display = c("s","f","d",rep("f",5)))
 
   #### PLOT: trace (single parameter) ####
-  source("server_files/output/trace_plot_reactive.R", local = TRUE)
+  source("server_files/outputs/trace_plot_reactive.R", local = TRUE)
   output$trace_plot_out <- renderPlot({
     trace_plot()
   })
@@ -81,7 +81,7 @@ shinyServer(function(input, output, session) {
   )
 
   ### PLOT: density (single parameter) ####
-  source("server_files/output/density_plot_reactive.R", local = TRUE)
+  source("server_files/outputs/density_plot_reactive.R", local = TRUE)
   output$density_plot_out <- renderPlot({
     density_plot()
   })
@@ -107,7 +107,7 @@ shinyServer(function(input, output, session) {
 
 
   #### PLOT: contour (two parameters) ####
-  source("server_files/output/contour_plot_reactive.R", local = TRUE)
+  source("server_files/outputs/contour_plot_reactive.R", local = TRUE)
   output$contour_plot_out <- renderPlot({
     contour_plot()
   })
@@ -132,7 +132,7 @@ shinyServer(function(input, output, session) {
 
 
   #### DATATABLE: summary stats (all parameters) ####
-  source("server_files/output/summary_stats_reactive.R", local = TRUE)
+  source("server_files/outputs/summary_stats_reactive.R", local = TRUE)
   #   // color in red the names of parameters with rhats >= 1.1
   #     rowCallback = I(
   #       'function(row, data) {
@@ -160,8 +160,8 @@ shinyServer(function(input, output, session) {
 
 
   #### PLOT: median, CI, and density (multiple parameters) ####
-  source("server_files/output/multiparameter_plot_gg_reactive.R", local = TRUE)
-  source("server_files/output/multiparameter_plot_gg_slice_reactive.R", local = TRUE)
+  source("server_files/outputs/multiparameter_plot_gg_reactive.R", local = TRUE)
+  source("server_files/outputs/multiparameter_plot_gg_slice_reactive.R", local = TRUE)
   output$plot_param_vertical_out <- renderPlot({
     plot_param_vertical()
   }, width = 650, height = calc_height_param_plot)
@@ -219,7 +219,7 @@ shinyServer(function(input, output, session) {
 
 
   #### PLOT: autocorrelation (multiple parameters) ####
-  source("server_files/output/autocorr_plot_reactive.R", local = TRUE)
+  source("server_files/outputs/autocorr_plot_reactive.R", local = TRUE)
   output$autocorr_plot_out <- renderPlot({
     autocorr_plot()
   })
