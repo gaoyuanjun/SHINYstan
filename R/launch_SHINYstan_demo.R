@@ -3,16 +3,19 @@
 #' This function will create an S4 object of class \code{shinystan} in the Global Environment
 #' and launch the SHINYstan app using a pre-loaded example model.
 #'
-#' @param demo_name Character string giving the name of the Stan demo model.
+#' @param demo_name The name of the demo model as a character string.
 #' See \strong{Note} below for the available demos. If \code{demo_name} is
 #' omitted it will default to the \code{eight_schools} Stan example model.
 #'
 #' @note List of available demo models:
 #' \describe{
+#' \strong{Stan}
 #'   \item{\code{air}}{Berkson measurement error}
 #'   \item{\code{beetles}}{Logit model}
 #'   \item{\code{eight_schools}}{Multi-level linear model}
 #'   \item{\code{pumps}}{Conjugate gamma-Poisson hierarchical model}
+#' \strong{MCMCpack}
+#' \item{\code{MCMMhpoisson}}{Hierarchical Poisson regression with log link}
 #' }
 #'
 #' @return In addition to launching the app, an object of class \code{shinystan}
@@ -24,7 +27,9 @@
 #' launch_shinystan_demo("air")
 #' }
 #'
+#'
 launch_shinystan_demo <- function(demo_name = "eight_schools") {
+
   launch_demo <- function(object) {
     shiny_stan_object <<- object
     shiny::runApp(system.file("SHINYstan", package = "SHINYstan"))
@@ -42,5 +47,6 @@ launch_shinystan_demo <- function(demo_name = "eight_schools") {
   if (demo_name == "beetles") launch_demo(beetles_demo_shiny_stan)
   if (demo_name == "eight_schools") launch_demo(eight_schools_demo_shiny_stan)
   if (demo_name == "pumps") launch_demo(pumps_demo_shiny_stan)
+  if (demo_name == "MCMChpoisson") launch_demo(MCMChpoisson_demo_shiny_stan)
 }
 

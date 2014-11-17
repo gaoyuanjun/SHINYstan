@@ -21,10 +21,13 @@ and launch the SHINYstan app using a pre-loaded example model.
 \note{
 List of available demo models:
 \describe{
+\strong{Stan}
   \item{\code{air}}{Berkson measurement error}
   \item{\code{beetles}}{Logit model}
   \item{\code{eight_schools}}{Multi-level linear model}
   \item{\code{pumps}}{Conjugate gamma-Poisson hierarchical model}
+\strong{MCMCpack}
+\item{\code{MCMMhpoisson}}{Hierarchical Poisson regression with log link}
 }
 }
 \examples{
