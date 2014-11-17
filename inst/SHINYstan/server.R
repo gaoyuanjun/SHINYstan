@@ -15,7 +15,7 @@ shinyServer(function(input, output, session) {
   source("server_files/utilities/make_param_list_with_groups_sort.R", local=TRUE)
 
   # load all files for dynamic UIs
-  ui_files <- list.files(path = "server_files/dynamic_ui/ui", full.names = TRUE)
+  ui_files <- list.files(path = "server_files/dynamic_ui", full.names = TRUE)
   for (f in ui_files) {
     source(f, local = TRUE)
   }
