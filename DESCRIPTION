@@ -22,3 +22,6 @@ Suggests:
     rstan,
     coda,
     testthat
+Imports:
+    gtools,
+    shinyBS
