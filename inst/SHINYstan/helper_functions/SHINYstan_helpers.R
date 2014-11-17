@@ -31,7 +31,7 @@ no_lgnd <- theme(legend.position = "none")
 }
 
 # make_param_list_with_groups ------------------------------------------------------
-.make_param_list_with_groups <- function(object) {
+.make_param_list_with_groups <- function(object, sort_j = FALSE) {
   choices <- list()
   ll <- length(object@param_dims)
   LL <- sapply(1:ll, function(i) length(object@param_dims[[i]]))
@@ -46,6 +46,12 @@ no_lgnd <- theme(legend.position = "none")
       group <- object@param_groups[i]
       temp <- paste0(group,"\\[")
       ch <- object@param_names[grep(temp, object@param_names)]
+
+      if (sort_j == TRUE & LL[i] > 1) {
+        # change sorting so to, e.g. "beta[1,1] beta[1,2] beta[2,1] beta[2,2]"
+        # instead of "beta[1,1] beta[2,1] beta[1,2] beta[2,2]"
+        ch <- gtools::mixedsort(ch)
+      }
 
       # the next line avoids parameters whose names include the group name of a
       # different group of parameters being included in the latter group, e.g.
@@ -68,6 +74,11 @@ no_lgnd <- theme(legend.position = "none")
 .param_trace <- function(param, dat, warmup_val, inc_warmup, chain, palette,
                          rect, rect_color, rect_alpha, x1, x2, y1, y2) {
   dat <- melt(dat)
+
+  if (!("chains" %in% colnames(dat))) { # fixes for if there's only 1 chain:
+    dat$chains <- "chain:1"
+    dat$iterations <- 1:nrow(dat)
+  }
 
   if (!inc_warmup) dat <- subset(dat, iterations >= warmup_val)
   if (chain != 0) dat <- subset(dat, chains == paste0("chain:",chain))
@@ -102,9 +113,15 @@ no_lgnd <- theme(legend.position = "none")
 # param_dens --------------------------------------------------------------
 .param_dens <- function(param, dat, chain,
                         fill_color = NULL, line_color = NULL,
-                        point_est, CI, x_breaks, y_breaks) {
+                        point_est = "None", CI,
+                        x_breaks = "Some", y_breaks = "None") {
 
   dat <- melt(dat)
+
+  if (!("chains" %in% colnames(dat))) { # fixes for if there's only 1 chain:
+    dat$chains <- "chain:1"
+    dat$iterations <- 1:nrow(dat)
+  }
 
   if (chain != 0) {
     dat <- subset(dat, chains == paste0("chain:",chain))
@@ -155,8 +172,11 @@ no_lgnd <- theme(legend.position = "none")
 
 
 # param_contour -----------------------------------------------------------
-.param_contour <- function(samps, param, param2, type,
-                           contour_ops, pt_ops, scatter_ops) {
+.param_contour <- function(samps, param, param2, type, ops) {
+#                            contour_ops, scatter_ops) {
+
+  if (type %in% c("Contour", "Point")) contour_ops <- ops
+  if (type == "Scatter") scatter_ops <- ops
 
   shape_translator <- function(x) {
     shape <- ifelse(x >= 6, x + 9, x)
@@ -450,12 +470,8 @@ no_lgnd <- theme(legend.position = "none")
 
 
 # autocorr_plot -----------------------------------------------------------
-.autocorr_plot <- function(samps, params = NULL, all_param_names,
+.autocorr_plot <- function(samps, params = NULL, all_param_names, nChains,
                            lags = 25, flip = FALSE) {
-
-  if (!is.numeric(lags)) {
-    return(last_plot())
-  }
 
   params <- .update_params_with_groups(params, all_param_names)
   if(length(params) == 0) {
@@ -465,6 +481,12 @@ no_lgnd <- theme(legend.position = "none")
   params <- unique(params)
   dat <- samps[,,params]
   dat <- melt(dat)
+
+
+  if (!("chains" %in% colnames(dat))) { # fixes for if there's only 1 chain:
+    dat$chains <- "chain:1"
+    dat$iterations <- 1:nrow(dat)
+  }
 
   nParams <- length(params)
   if (nParams == 1) {
