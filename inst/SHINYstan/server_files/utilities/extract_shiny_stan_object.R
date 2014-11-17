@@ -6,5 +6,6 @@ nIter <- object@nIter
 nChains <- object@nChains
 warmup_val <- object@nWarmup
 samps_post_warmup <- samps_all[(warmup_val + 1):nIter,,]
+# samps_post_warmup <- object@samps_post_warmup
 fit_summary <- object@summary
 param_names <- object@param_names
