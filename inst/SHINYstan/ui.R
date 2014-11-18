@@ -12,8 +12,8 @@ object <- shiny_stan_object
 # _________________________________________________________________________
 shinyUI(
   fluidPage(theme = NULL,
+#   fluidPage(theme = "flatly.css",
             verticalLayout(
-
 
               # Title -------------------------------------------------------------------
               # _________________________________________________________________________
@@ -27,6 +27,7 @@ shinyUI(
               # Main Panel --------------------------------------------------------------
               # _________________________________________________________________________
               mainPanel(width = 10,
+                        withMathJax(),
 
 
                         #### tags ####
@@ -44,17 +45,21 @@ shinyUI(
                         tags$style(type="text/css", "#trace_rect_alpha, #contour_bins, #scatter_pt_alpha, #scatter_pt_size, #scatter_pt_shape, #scatter_ellipse_lty, #scatter_ellipse_lwd, #scatter_ellipse_alpha { font-size:12px; width: 45px; height:15px;}"),
                         tags$style(type="text/css", "#param2_contour, #contour_type { font-size:10px; height:25px;}"),
                         tags$style(type="text/css", "#stats_digits, #ac_lags { width: 40px;}"),
-                        tags$style(type="text/css", "#save_settings_trace, #save_settings_density, #save_settings_contour, #save_settings_param_plot {border-color: #428bca; background-color: #428bca; font-size:12px;}"),
-                        tags$style(type="text/css", "#download_param_plot, #download_trace, #download_contour, #download_density, #download_summary_stats {border-color: #5e3c58; background-color: #5e3c58; font-size: 12px;}"),
-                        tags$style(type="text/css", "#trace_isolation, #density_isolation, #contour_isolation, #autocorr_isolation, #param_plot_isolation {font-size:12px;}"),
-                        tags$style(type="text/css", "#density_options {background-color: #559e83;}"),
-#                         tags$style(type="text/css", "#param_plot_customize {background-color: #D3D3D3;}"),
-                        tags$style(type="text/css", ".modal-header {background-color: #83adb5;}"),
+                        tags$style(type="text/css", "#save_settings_trace, #save_settings_density, #save_settings_contour, #save_settings_param_plot {border-color: #428bca; font-size:12px;}"),
+                        tags$style(type="text/css", "#download_param_plot, #download_trace, #download_contour, #download_density, #download_summary_stats {border-color: #5e3c58; font-size: 12px;}"),
+                        tags$style(type="text/css", "#trace_isolation, #density_isolation, #contour_isolation, #autocorr_isolation, #param_plot_isolation {font-size: 12px;}"),
+                        tags$style(type="text/css", ".modal-header {background-color: #83adb5; border-radius: 5px;}"),
                         #                         tags$style(type="text/css", ".modal-body {font-size: 15px; filter: alpha(opacity=20); opacity: .7;}"),
                         tags$style(type="text/css", ".modal-backdrop {background-color: #C6DBEF; filter: alpha(opacity=100);}"),
                         tags$style(type="text/css", ".accordion-heading {background-color: transparent;}"),
                         tags$style(type="text/css", ".accordion-inner {background-color: #ecf3f9;}"),
                         tags$style(type="text/css", ".table-bordered {border-color: #428bca;}"),
+                        tags$style(type="text/css", ".nav-pills a:hover{color: #214565;}"),
+                        tags$style(type="text/css", ".nav-pills a{font-size: 18px; font-weight: 900;  }"),
+                        tags$style(type="text/css", ".nav-pills li.active a{font-size: 18px; font-weight: 900; }"),
+                        tags$style(type="text/css", ".jslider {color: #428bca; font-weight: bold;data-skin: 'blue';}"),
+
+
 
                         tabsetPanel(type = "tabs", position = "above",
 
@@ -65,7 +70,7 @@ shinyUI(
                                              #### subTabs ####
                                              tabsetPanel(type = "pills",
                                                          #### multiparameter plots ####
-                                                         tabPanel(h4("Visuals"),
+                                                         tabPanel("Visuals",
 
                                                                   tabsetPanel(
 
@@ -74,7 +79,7 @@ shinyUI(
                                                                                        fluidRow(
                                                                                          uiOutput("ui_multiparam_sort"),
                                                                                          uiOutput("ui_multiparam_selectize"),
-                                                                                         column(3, offset = 2, sliderInput("param_plot_ci_level", h5("Credible interval"), min = 50, max = 95, value = 50, step = 5))
+                                                                                         column(3, offset = 2, sliderInput("param_plot_ci_level", h5("Credible interval (%)"), min = 50, max = 95, value = 50, step = 5))
                                                                                        ),
                                                                                        bsCollapsePanel(title = "View options",  id="param_plot_customize", value="yes",
                                                                                                        fluidRow(
@@ -106,7 +111,8 @@ shinyUI(
                                                                              plotOutput("autocorr_plot_out"),
                                                                              hr(),
                                                                              fluidRow(
-                                                                               column(3, offset = 9, bsButton("autocorr_isolation", label = "Isolation view"))
+                                                                               column(3, offset = 9, bsButton("autocorr_isolation", label = "Isolation view")),
+                                                                               bsTooltip(id = "autocorr_isolation", title = "Open plot in modal window", placement = "left", trigger = "hover")
                                                                              ),
                                                                              bsModal("autocorr_isolation_modal", "Markov chain autocorrelation", trigger = "autocorr_isolation",
                                                                                      tags$div(class = "span12",
@@ -118,7 +124,7 @@ shinyUI(
                                                          ),
 
                                                          #### summary stats ####
-                                                         tabPanel(h4("Statistics"),
+                                                         tabPanel("Statistics",
                                                                   tabsetPanel(
                                                                     tabPanel("Posterior summary statistics",
                                                                              fluidRow(
@@ -130,8 +136,10 @@ shinyUI(
                                                                                                          ),
                                                                                                          hr(),
                                                                                                          checkboxGroupInput("stats_columns", label = h5("Columns"),
-                                                                                                                            choices = c("Rhat", "Effective sample size (n_eff)" = "n_eff", "Posterior mean" = "mean", "Posterior standard deviation" = "sd", "MCMC standard error" = "se_mean", "Quantile: 2.5%" = "2.5%", "Quantile: 25%" = "25%", "Quantile: 50%" = "50%", "Quantile: 75%" = "75%", "Quantile: 97.5%" = "97.5%"),
-                                                                                                                            selected = c("Rhat", "n_eff", "mean", "sd", "se_mean", "2.5%", "50%", "97.5%")),
+                                                                                                                            choices = c("Rhat", "Effective sample size (n_eff)" = "n_eff", "Posterior mean" = "mean", "Posterior standard deviation" = "sd", "Monte Carlo uncertainty (se_mean)" = "se_mean", "Quantile: 2.5%" = "2.5%", "Quantile: 25%" = "25%", "Quantile: 50%" = "50%", "Quantile: 75%" = "75%", "Quantile: 97.5%" = "97.5%"),
+                                                                                                                            selected = c("Rhat", "n_eff", "mean", "sd", "2.5%", "50%", "97.5%")),
+#                                                                                                          bsButton("btn_open_glossary", "View glossary", style = "link"),
+#                                                                                                          uiOutput("glossary_modal"),
                                                                                                          hr(),
                                                                                                          # export
                                                                                                          downloadButton("download_summary_stats", " Save table as .RData")
@@ -251,17 +259,18 @@ shinyUI(
 
                                     #### TAB: Notes ####
                                     tabPanel(h4("Notes"),
+#                                              br(),
+                                             helpText(strong("Use this space to store notes about your model")),
+                                             p("The text will be saved in the",code("user_model_info"),
+                                               "slot of your shinystan object and displayed here
+                                               each time SHINYstan is launched for this object."),
                                              br(),
-                                             helpText("Use this space to store notes about your model. ",
-                                                      "The text will be saved in the user_model_info slot of",
-                                                      "your shinystan object and displayed here each time SHINYstan",
-                                                      "is launched for this object."),
-                                             br(),
-                                             tags$textarea(id="user_model_info", style = "width: 500px;", rows=10, cols=60, shiny_stan_object@user_model_info),
+                                             tags$textarea(id="user_model_info", style = "width: 500px; border-color: #214565;", rows=20, cols=60, shiny_stan_object@user_model_info),
                                              br(),
                                              fluidRow(
                                                column(3, actionButton("save_user_model_info", label = "Save Changes")),
-                                               column(8, offset = 1, textOutput("user_text_saved"))
+                                               column(8, offset = 1, textOutput("user_text_saved")),
+                                               tags$style(type = "text/css", "#user_text_saved {color: gray;}")
                                              ),
                                              hr()
                                              #       h6("Why use this feature?"),
@@ -276,10 +285,10 @@ shinyUI(
                                     #### TAB: About ####
 #                                     tabPanel(h4(style = "color: #c4b0ac;", "About"),
                                     tabPanel(h4(style = "color: #c6dcef;", "About"),
-                                             h3("About SHINYstan"),
-                                             p("Coming soon."),
-                                             hr(),
-                                             h3("Credits"),
+#                                              h3("About SHINYstan"),
+#                                              p("Coming soon."),
+#                                              hr(),
+                                             h3("Contributors"),
                                              h4("SHINYstan"),
                                              htmlOutput("ui_credits"),
                                              br(),
@@ -291,9 +300,19 @@ shinyUI(
 #                                     tabPanel(h4(style = "color: #5e3c58;", "Help"),
                                     tabPanel(h4(style = "color: #214565;", "Help"),
                                              h3("SHINYstan help"),
-                                             p("Coming soon."),
+                                             p("More coming soon."),
                                              bsButton("btn_help_appearance_settings", label = "Saving/loading appearance settings", style = "link"),
-                                             uiOutput("help_modal_appearance_settings")
+                                             uiOutput("help_modal_appearance_settings"),
+                                             bsButton("btn_help_saving_ggplot", label = "Saving plots as ggplot2 objects", style = "link"),
+                                             uiOutput("help_modal_saving_ggplot"),
+                                             hr()
+#                                              h4("Glossary"),
+#                                              bsButton("btn_help_defn_rhat", label = "Rhat", style = "link"),
+#                                              uiOutput("help_modal_defn_rhat"),
+#                                              bsButton("btn_help_defn_n_eff", label = "n_eff", style = "link"),
+#                                              uiOutput("help_modal_defn_n_eff"),
+#                                              bsButton("btn_help_defn_se_mean", label = "se_mean", style = "link"),
+#                                              uiOutput("help_modal_defn_se_mean")
                                     )
 
 

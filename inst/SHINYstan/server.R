@@ -1,4 +1,5 @@
 library(shiny)
+library(shinyBS)
 
 # load the helper functions
 source("helper_functions/SHINYstan_helpers.R", local=TRUE)
@@ -25,19 +26,8 @@ shinyServer(function(input, output, session) {
   updateButton(session, "btn_help_multiparam_sort", style = "inverse")
 
   # add tooltips
-  tooltip_title_download <- "Saves the full ggplot object for the plot as an .RData file"
-  tooltips_download <- c("param_plot", "trace", "density", "contour")
-  for (ttip in tooltips_download) {
-    addTooltip(session, id = paste0("download_", ttip), title = tooltip_title_download, placement = "right", trigger = "hover")
-  }
+  addTooltip(session, id = "autocorr_isolation", title = "Open plot in modal window", placement = "left", trigger = "hover")
 
-  tooltip_title_isolation <- "Open plot in modal window"
-  tooltips_isolation <- c("param_plot", "autocorr", "trace", "density", "contour")
-  for (ttip in tooltips_isolation) {
-    addTooltip(session, id = paste0(ttip,"_isolation"), title = tooltip_title_isolation, placement = "left", trigger = "hover")
-  }
-
-  addTooltip(session, id = "tracezoom", title = "TraceZoom allows you to interactively control the range of iterations and values displayed in the trace plot.", placement = "right", trigger = "hover")
 
 
 
@@ -212,9 +202,9 @@ shinyServer(function(input, output, session) {
     })
   })
   output$user_text_saved <- renderText({
-    input$save_user_model_info
+    input$save_user_model_info # take dependency on action button
     if (input$save_user_model_info != 0)
-      print(paste("Saved: ", Sys.time()))
+      print(paste("Saved:  ", format(Sys.time(), "%a %b %d %Y %X")))
   })
 
 

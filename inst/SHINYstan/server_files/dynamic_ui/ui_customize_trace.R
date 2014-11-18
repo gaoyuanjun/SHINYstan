@@ -27,14 +27,15 @@ output$ui_trace_customize <- renderUI({
             ),
             fluidRow(
               column(3, checkboxInput("trace_warmup", h5("Include warmup"), value = TRUE)),
-              column(6, offset = 3, checkboxInput("tracezoom", label= h5("Enable TraceZoom (experimental)"), value = FALSE))
+              column(6, offset = 3, checkboxInput("tracezoom", label= h5("Enable TraceZoom"), value = FALSE)),
+              bsTooltip(id = "tracezoom", title = "TraceZoom allows you to interactively control the range of iterations and values displayed in the trace plot.", placement = "right", trigger = "hover")
             ),
             conditionalPanel(condition = "input.tracezoom == true",
                              wellPanel(
                                # trace zoom options
                                fluidRow(
                                  # iterations slider
-                                 column(3, offset = 1, sliderInput("xzoom", width = '100%', label = h6("Iterations"), min = 0, max = object@nIter, step = 1, value = c(0, object@nIter))),
+                                 column(4, sliderInput("xzoom", width = '100%', label = h6("Iterations"), min = 0, max = object@nIter, step = 1, value = c(0, object@nIter))),
                                  # value slider
                                  column(7, offset = 1, sliderInput("yzoom", width = '100%', label = h6("Value"), min = min_val, max = max_val, step = 0.01, value = c(min_val, max_val)))
                                )

@@ -6,7 +6,7 @@
 launch_shinystan_demo(demo_name = "eight_schools")
 }
 \arguments{
-\item{demo_name}{Character string giving the name of the Stan demo model.
+\item{demo_name}{The name of the demo model as a character string.
 See \strong{Note} below for the available demos. If \code{demo_name} is
 omitted it will default to the \code{eight_schools} Stan example model.}
 }
