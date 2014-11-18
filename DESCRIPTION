@@ -14,8 +14,7 @@ Depends:
     ggplot2,
     plyr,
     reshape2,
-    shiny,
-    shinyBS
+    shiny
 License: GPL (>=3)
 LazyData: true
 Suggests:
@@ -24,4 +23,5 @@ Suggests:
     testthat
 Imports:
     gtools,
-    grid
+    grid,
+    shinyBS
