@@ -15,7 +15,8 @@ Depends:
     grid,
     plyr,
     reshape2,
-    shiny
+    shiny,
+    shinyBS
 License: GPL (>=3)
 LazyData: true
 Suggests:
@@ -24,4 +25,5 @@ Suggests:
     testthat
 Imports:
     gtools,
-    shinyBS
+    shinyBS,
+    grid
